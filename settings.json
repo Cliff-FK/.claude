@@ -47,10 +47,8 @@
       "Edit(~/.claude/skills/skill-builder/**)",
       "Skill(deep-research)",
       "Skill(deep-research:*)",
-      "Edit(~/.claude/skills/design-auditor/**)"
-    ],
-    "ask": [
-      "Workflow"
+      "Edit(~/.claude/skills/design-auditor/**)",
+      "Edit(~/.claude/skills/design-system-advisor/**)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -83,6 +81,9 @@
       "PowerShell(Set-MpPreference:*)",
       "PowerShell(Set-ExecutionPolicy Bypass*)",
       "PowerShell(Set-ExecutionPolicy Unrestricted*)"
+    ],
+    "ask": [
+      "Workflow"
     ],
     "additionalDirectories": [
       "C:\\Users\\Cliff Rob\\.claude\\workflows",
