@@ -66,7 +66,8 @@
       "Read(//c/tmp/**)",
       "Bash(rm -rf 'C:\\\\Users\\\\Cliff Rob/.claude/skills/design-motion-principles')",
       "Bash(cp -r /tmp/design-motion-principles/skills/design-motion-principles 'C:\\\\Users\\\\Cliff Rob/.claude/skills/design-motion-principles')",
-      "Bash(rm -f \"/c/Users/Cliff Rob/.claude/playwright-output/all-one-page.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-fixed-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-light-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-v2-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var1.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var2.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var3.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var4.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var5.png\"; echo \"screenshots de test supprimés\")"
+      "Bash(rm -f \"/c/Users/Cliff Rob/.claude/playwright-output/all-one-page.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-fixed-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-light-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-v2-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var1.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var2.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var3.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var4.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var5.png\"; echo \"screenshots de test supprimés\")",
+      "Bash(rm -f \"c:/Users/Cliff Rob/.claude/projects/c--MAMP-htdocs-webidi-morphblock-website/memory/lecon-cadrage-avant-de-coder.md\" \"c:/Users/Cliff Rob/.claude/projects/c--MAMP-htdocs-webidi-morphblock-website/memory/agent-framing-critic.md\" && echo \"supprimées\")"
     ],
     "deny": [
       "Read(**/.env)",
