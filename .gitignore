@@ -1,0 +1,61 @@
+# ~/.claude — versioning DENY-BY-DEFAULT
+# Tout est ignoré ; seules les zones explicitement whitelistées plus bas sont suivies.
+# Rationale : ce dossier contient secrets, credentials, transcripts et mémoires.
+# On ne versionne QUE la config réutilisable (skills/agents/hooks/CLAUDE.md/commands/settings).
+
+# 1) Tout ignorer
+/*
+/**
+
+# 2) Whitelister les zones approuvées (répertoires : ré-inclure le dossier puis son contenu)
+!/.gitignore
+!/CLAUDE.md
+
+!/skills/
+!/skills/**
+
+!/agents/
+!/agents/**
+
+!/hooks/
+!/hooks/**
+
+!/commands/
+!/commands/**
+
+!/settings.json
+
+# 3) Garde-fous : ré-exclure tout secret même s'il se glisse dans une zone whitelistée
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/.env
+**/.env.*
+**/*.credentials.json
+**/.credentials.json
+**/*secret*
+**/*password*
+**/*token*
+**/id_rsa*
+**/id_ed25519*
+
+# 4) Ré-exclure explicitement les zones sensibles connues (défense en profondeur)
+/secrets/
+/sessions/
+/projects/
+/playwright-output/
+/shell-snapshots/
+/file-history/
+/backups/
+/debug/
+/plans/
+/session-env/
+/.credentials.json
+/.tmp_pass
+/.turn-timing
+/.last-cleanup
+/mcp-needs-auth-cache.json
+/stats-cache.json
+/agent-memory-local/
+/agent-memory/

@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "PowerShell(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "WebFetch(*)",
+      "WebSearch",
+      "mcp__playwright__*",
+      "mcp__context7__*",
+      "Bash(/c/tools/pdftk-java/pdftk.bat:*)",
+      "Edit(~/.claude/skills/copywriting-landing/**)",
+      "Bash(mkdir -p 'C:\\\\Users\\\\Cliff Rob/.claude/workflows')",
+      "Bash(cp '/c/Users/Cliff Rob/.claude/projects/c--MAMP-htdocs-webidi-morphblock-website/3545cdc0-4400-4fbf-bae5-294a578c844d/workflows/scripts/generator-critic-verifier-wf_70779d11-ceb.js' 'C:\\\\Users\\\\Cliff Rob/.claude/workflows/generator-critic-verifier.js')",
+      "Read(//c/Users/Cliff Rob/.claude/**)",
+      "Read(//c/Users/Cliff Rob/.claude/workflows/**)",
+      "Edit(~/.claude/skills/seo-launch/**)",
+      "Edit(~/.claude/skills/email-lifecycle/**)",
+      "Edit(~/.claude/skills/paid-ads/**)",
+      "Edit(~/.claude/skills/wp-save-ui-test/**)",
+      "Edit(~/.claude/skills/minify-assets/**)",
+      "Edit(~/.claude/skills/wp-plugin-check/**)",
+      "Edit(~/.claude/skills/wp-native/**)",
+      "Workflow(research-arbitrate)",
+      "Read(//c/MAMP/htdocs/wmki/wp-landing-mki-2026/wp-includes/**)",
+      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-includes/**)",
+      "Read(//c/MAMP/htdocs/wmki/wp-landing-mki-2026/wp-admin/includes/**)",
+      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-admin/includes/**)",
+      "Read(//c/MAMP/htdocs/**)",
+      "Read(//c/MAMP/htdocs/gambetta/site-gambetta-2025/wp-includes/**)",
+      "Skill(research-arbitrate)",
+      "Skill(research-arbitrate:*)",
+      "Read(//c/Users/Cliff Rob/AppData/Local/Temp/fsdk-inspect/package/dist/**)",
+      "Edit(~/.claude/skills/freemius/**)",
+      "Edit(~/.claude/skills/marketing-psychology/**)",
+      "Bash(printf '%s\\\\n' '- [Psychological pricing → marketing-psychology]\\(psychological-pricing-dans-marketing-psychology.md\\) — sujet intégré en enrichissant le skill existant, ne pas créer de skill dédié \\(doublon\\)' >> \"c:/Users/Cliff Rob/.claude/projects/c--MAMP-htdocs-webidi-morphblock-website/memory/MEMORY.md\")",
+      "Bash(mkdir -p \"C:/Users/Cliff Rob/.claude/skills/wporg-readme-optimizer/reference\" \"C:/Users/Cliff Rob/.claude/skills/wporg-readme-optimizer/scripts\" && echo ok)",
+      "Edit(~/.claude/skills/wporg-readme-optimizer/**)",
+      "Edit(~/.claude/skills/pricing-strategist/**)",
+      "Bash(printf '%s\\\\n' '- [Pricing Morph Blocks]\\(pricing-morph-blocks.md\\) — grille validée API Freemius + positionnement PRO + pas de concurrent direct \\(détail docs/pricing-strategy.md\\)' >> \"c:/Users/Cliff Rob/.claude/projects/c--MAMP-htdocs-webidi-morphblock-website/memory/MEMORY.md\")",
+      "Bash(mkdir -p \"C:/Users/Cliff Rob/.claude/skills/in-product-upgrade-prompts/reference\" \"C:/Users/Cliff Rob/.claude/skills/cancellation-flow-designer/reference\" && echo ok)",
+      "Edit(~/.claude/skills/in-product-upgrade-prompts/**)",
+      "Edit(~/.claude/skills/cancellation-flow-designer/**)",
+      "Edit(~/.claude/skills/agent-builder/**)",
+      "Edit(~/.claude/skills/skill-builder/**)",
+      "Skill(deep-research)",
+      "Skill(deep-research:*)",
+      "Workflow(deep-research)",
+      "Edit(~/.claude/skills/design-auditor/**)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/.credentials.json)",
+      "Read(**/.ssh/**)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)",
+      "Read(**/*.pem)",
+      "Read(**/*.pfx)",
+      "Read(**/*.p12)",
+      "Read(**/.aws/credentials)",
+      "Read(**/.git-credentials)",
+      "Read(**/.tmp_pass)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Edit(**/.credentials.json)",
+      "Write(**/.credentials.json)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(format:*)",
+      "Bash(diskpart:*)",
+      "Bash(bcdedit:*)",
+      "Bash(mkfs:*)",
+      "Bash(dd if=:*)",
+      "PowerShell(Remove-Item C:\\Windows*)",
+      "PowerShell(Remove-Item C:\\Program Files*)",
+      "PowerShell(Set-MpPreference:*)",
+      "PowerShell(Set-ExecutionPolicy Bypass*)",
+      "PowerShell(Set-ExecutionPolicy Unrestricted*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Cliff Rob\\.claude\\workflows",
+      "C:\\Users\\Cliff Rob\\.claude\\agents",
+      "C:\\Users\\Cliff Rob\\.claude\\scripts",
+      "c:\\Users\\Cliff Rob\\.claude\\projects\\c--MAMP-htdocs-webidi-morphblock-website\\memory",
+      "C:\\Users\\Cliff Rob\\.claude\\skills\\wporg-readme-optimizer",
+      "C:\\Users\\Cliff Rob\\.claude\\skills\\in-product-upgrade-prompts"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\phpcs-wp-native.ps1\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\guard-write-scope.ps1\""
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\guard-secrets-read.ps1\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\turn-timer.ps1\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\play-sound.ps1\" always"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\Cliff Rob\\.claude\\hooks\\play-sound.ps1\" stop"
+          }
+        ]
+      }
+    ]
+  },
+  "language": "french",
+  "effortLevel": "high"
+}
