@@ -24,7 +24,6 @@
       "Edit(~/.claude/skills/minify-assets/**)",
       "Edit(~/.claude/skills/wp-plugin-check/**)",
       "Edit(~/.claude/skills/wp-native/**)",
-      "Workflow(research-arbitrate)",
       "Read(//c/MAMP/htdocs/wmki/wp-landing-mki-2026/wp-includes/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-includes/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-landing-mki-2026/wp-admin/includes/**)",
@@ -48,8 +47,10 @@
       "Edit(~/.claude/skills/skill-builder/**)",
       "Skill(deep-research)",
       "Skill(deep-research:*)",
-      "Workflow(deep-research)",
       "Edit(~/.claude/skills/design-auditor/**)"
+    ],
+    "ask": [
+      "Workflow"
     ],
     "deny": [
       "Read(**/.env)",
@@ -89,7 +90,8 @@
       "C:\\Users\\Cliff Rob\\.claude\\scripts",
       "c:\\Users\\Cliff Rob\\.claude\\projects\\c--MAMP-htdocs-webidi-morphblock-website\\memory",
       "C:\\Users\\Cliff Rob\\.claude\\skills\\wporg-readme-optimizer",
-      "C:\\Users\\Cliff Rob\\.claude\\skills\\in-product-upgrade-prompts"
+      "C:\\Users\\Cliff Rob\\.claude\\skills\\in-product-upgrade-prompts",
+      "C:\\Users\\Cliff Rob\\.claude"
     ]
   },
   "enableAllProjectMcpServers": true,
