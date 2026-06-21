@@ -1,7 +1,8 @@
 # ~/.claude — versioning DENY-BY-DEFAULT
 # Tout est ignoré ; seules les zones explicitement whitelistées plus bas sont suivies.
 # Rationale : ce dossier contient secrets, credentials, transcripts et mémoires.
-# On ne versionne QUE la config réutilisable (skills/agents/hooks/CLAUDE.md/commands/settings).
+# On ne versionne QUE la config réutilisable (skills/agents/hooks/commands/scripts/
+# workflows/CLAUDE.md/settings/phpcs ruleset + sounds & plugins dont dépendent les hooks).
 
 # 1) Tout ignorer
 /*
@@ -24,6 +25,22 @@
 !/commands/**
 
 !/settings.json
+
+!/scripts/
+!/scripts/**
+
+!/workflows/
+!/workflows/**
+
+!/phpcs-wp-native.xml
+
+# Assets dont dépendent des hooks versionnés (sans eux le setup est cassé au clone)
+!/sounds/
+!/sounds/**
+
+# État des plugins Claude Code (reproductibilité du setup ; pas de secret)
+!/plugins/
+!/plugins/**
 
 # 3) Garde-fous : ré-exclure tout secret même s'il se glisse dans une zone whitelistée
 **/*.key
