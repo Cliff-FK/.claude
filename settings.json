@@ -1,5 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "IMPECCABLE_NO_UPDATE_CHECK": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(*)",
@@ -48,7 +51,22 @@
       "Skill(deep-research)",
       "Skill(deep-research:*)",
       "Edit(~/.claude/skills/design-auditor/**)",
-      "Edit(~/.claude/skills/design-system-advisor/**)"
+      "Bash(cp \"C:/Users/Cliff Rob/.claude/playwright-output/bug1_free_mobile_order5_leak.png\" /c/tmp/morphgate/bug1_free_mobile_order5_leak.png)",
+      "Read(//c/tmp/morphgate/**)",
+      "Bash(cp \"C:/Users/Cliff Rob/.claude/playwright-output/bug1_free_mobile_order5_leak.png\" /c/tmp/morphgate/ && ls -la /c/tmp/morphgate/*.png)",
+      "Bash(rm -rf 'C:\\\\Users\\\\Cliff Rob/.claude/skills/impeccable')",
+      "Bash(cp -r /tmp/impeccable/.claude/skills/impeccable 'C:\\\\Users\\\\Cliff Rob/.claude/skills/impeccable')",
+      "Skill(impeccable)",
+      "Skill(impeccable:*)",
+      "Bash(rm -rf 'C:\\\\Users\\\\Cliff Rob/.claude/skills/frontend-design')",
+      "Bash(mkdir -p 'C:\\\\Users\\\\Cliff Rob/.claude/skills/frontend-design')",
+      "Bash(cp /tmp/skills-official/skills/frontend-design/SKILL.md 'C:\\\\Users\\\\Cliff Rob/.claude/skills/frontend-design/SKILL.md')",
+      "Bash(cp /tmp/skills-official/skills/frontend-design/LICENSE.txt 'C:\\\\Users\\\\Cliff Rob/.claude/skills/frontend-design/LICENSE.txt')",
+      "Bash(cp \"C:/Users/Cliff Rob/.claude/playwright-output/free_mobile.png\" c:/tmp/free_mobile.png)",
+      "Read(//c/tmp/**)",
+      "Bash(rm -rf 'C:\\\\Users\\\\Cliff Rob/.claude/skills/design-motion-principles')",
+      "Bash(cp -r /tmp/design-motion-principles/skills/design-motion-principles 'C:\\\\Users\\\\Cliff Rob/.claude/skills/design-motion-principles')",
+      "Bash(rm -f \"/c/Users/Cliff Rob/.claude/playwright-output/all-one-page.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-fixed-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-light-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/pricing-v2-render.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var1.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var2.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var3.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var4.png\" \"/c/Users/Cliff Rob/.claude/playwright-output/var5.png\"; echo \"screenshots de test supprimés\")"
     ],
     "deny": [
       "Read(**/.env)",
@@ -92,7 +110,8 @@
       "c:\\Users\\Cliff Rob\\.claude\\projects\\c--MAMP-htdocs-webidi-morphblock-website\\memory",
       "C:\\Users\\Cliff Rob\\.claude\\skills\\wporg-readme-optimizer",
       "C:\\Users\\Cliff Rob\\.claude\\skills\\in-product-upgrade-prompts",
-      "C:\\Users\\Cliff Rob\\.claude"
+      "C:\\Users\\Cliff Rob\\.claude",
+      "C:\\Users\\Cliff Rob\\.claude\\playwright-output"
     ]
   },
   "enableAllProjectMcpServers": true,
