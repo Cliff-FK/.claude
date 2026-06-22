@@ -59,6 +59,7 @@ Référent Freemius **complet** : coder le SDK **et** conseiller la monétisatio
 - Toute signature/champ **traçable** à une source. Shape non confirmée empiriquement ⇒ **`TODO(sandbox)`**, pas une devinette.
 - Vérifier le comportement réel quand possible (achat sandbox, webhook reçu, statut DB) — **signal direct, jamais proxy**.
 - Plan/diff **avant** d'écrire si non trivial.
+- **JAMAIS de script jetable dans le projet** pour générer coupon / lien checkout / réduction / diagnostic — produire le **même résultat directement dans le flux de la conv** (exécution inline `node -e`/heredoc, résultat collé dans la réponse).
 
 ## État écosystème IA Freemius (juin 2026)
 **Aucun MCP / skill / agent officiel** — ce skill est la réponse maison. Officiel embryonnaire : `Freemius/freemius-ai` (exemples vibe-coding, « skill assets planned ») — surveiller. Tiers : `itaides/freemius-mcp` (MCP communautaire ~140 ops, non publié npm) = inspiration, pas à installer.

@@ -23,7 +23,16 @@
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/scss/generics/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/js/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/**)",
-      "Edit(~/.claude/skills/asana-triage/**)"
+      "Edit(~/.claude/skills/asana-triage/**)",
+      "Bash(mkdir -p /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/skills /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/agents)",
+      "Bash(cp -r ~/.claude/skills/asana-triage /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/skills/)",
+      "Bash(cp ~/.claude/agents/asana-ticket-analyzer.md /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/agents/)",
+      "Edit(/.claude/skills/asana-triage/**)",
+      "Bash(mkdir -p .claude/sync-kit/global/agents)",
+      "Bash(cp -r ~/.claude/skills/asana-triage .claude/sync-kit/global/skills/)",
+      "Bash(cp ~/.claude/agents/asana-ticket-analyzer.md .claude/sync-kit/global/agents/)",
+      "Edit(~/.claude/skills/freemius/**)",
+      "Read(//c/MAMP/htdocs/webidi/lp-morphblocks/src/**)"
     ],
     "deny": [
       "Read(**/.env)",
