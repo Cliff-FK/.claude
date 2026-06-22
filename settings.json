@@ -19,7 +19,11 @@
       "Skill(research-arbitrate)",
       "Skill(research-arbitrate:*)",
       "Skill(impeccable)",
-      "Skill(impeccable:*)"
+      "Skill(impeccable:*)",
+      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/scss/generics/**)",
+      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/js/**)",
+      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/**)",
+      "Edit(~/.claude/skills/asana-triage/**)"
     ],
     "deny": [
       "Read(**/.env)",
