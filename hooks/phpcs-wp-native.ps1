@@ -39,7 +39,9 @@ try {
     $cmd = Get-Command php -ErrorAction SilentlyContinue
     if ($cmd) { $php = $cmd.Source }
     if (-not $php) {
-        $mamp = Get-ChildItem 'C:\MAMP\bin\php' -Directory -Filter 'php*' -ErrorAction SilentlyContinue |
+        # Racine du stack local : $env:MAMP_ROOT (accepte le style MSYS /c/MAMP) sinon C:\MAMP.
+        $mampRoot = if ($env:MAMP_ROOT) { $env:MAMP_ROOT -replace '^/([a-zA-Z])/', '$1:\' -replace '/', '\' } else { 'C:\MAMP' }
+        $mamp = Get-ChildItem (Join-Path $mampRoot 'bin\php') -Directory -Filter 'php*' -ErrorAction SilentlyContinue |
                 Where-Object { Test-Path (Join-Path $_.FullName 'php.exe') } |
                 Sort-Object Name -Descending | Select-Object -First 1
         if ($mamp) { $php = Join-Path $mamp.FullName 'php.exe' }

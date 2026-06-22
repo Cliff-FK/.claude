@@ -57,6 +57,11 @@
 **/id_rsa*
 **/id_ed25519*
 
+# Exception : ce hook est du CODE de config (son nom contient "secret" mais n'est
+# pas un secret). Sans cette ré-inclusion, **/*secret* l'exclut -> absent du clone
+# -> guard-secrets-read inactif. Régression réelle déjà rencontrée.
+!/hooks/guard-secrets-read.ps1
+
 # 4) Ré-exclure explicitement les zones sensibles connues (défense en profondeur)
 /secrets/
 /sessions/
