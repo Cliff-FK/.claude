@@ -15,7 +15,7 @@ Tu es un analyste de ticket Asana. Tu COMPRENDS et RELIES un ticket à son code 
 ## Accès Asana — via le module réutilisable (rien en dur, token jamais en argv)
 Le module découvre l'identité/workspaces, lit le token depuis le Credential Manager et pagine :
 ```bash
-API="$USERPROFILE\.claude\skills\asana-triage\bin\asana-api.mjs"
+API="$USERPROFILE/.claude/skills/asana-triage/bin/asana-api.mjs"
 node "$API" task <gid>          # détail tâche (name, notes, projects, section, custom_fields, num_subtasks...)
 node "$API" stories <gid>       # commentaires + activité (commentaires = type=comment)
 node "$API" attachments <gid>   # pièces jointes avec download_url

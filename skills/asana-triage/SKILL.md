@@ -21,15 +21,18 @@ Pipeline : **détecter → comprendre → router vers le projet → proposer →
 
 ## 0. Connexion & découverte
 ```bash
-API="$USERPROFILE\.claude\skills\asana-triage\bin\asana-api.mjs"   # chemin résolu au runtime, pas de username en dur
+BIN="$USERPROFILE/.claude/skills/asana-triage/bin"   # skill GLOBAL, $USERPROFILE résolu par poste
+API="$BIN/asana-api.mjs"
 node "$API" me            # -> identité + workspaces (aucun gid supposé)
 ```
-Si erreur « Token introuvable » : demander le PAT à l'utilisateur et le stocker, puis revérifier :
+**Premier lancement sur un nouveau poste** (seule étape manuelle, le secret ne peut pas être dans git) :
+si `node "$API" me` échoue avec « Token introuvable », demander le PAT à l'utilisateur et le stocker
+dans le Credential Manager de CE poste, puis revérifier par `node "$API" me` :
 ```bash
-CRED="$USERPROFILE\.claude\skills\asana-triage\bin\asana-cred.ps1"
-ASANA_CRED_IN='<pat>' powershell.exe -NoProfile -File "$CRED" -Action store
+ASANA_CRED_IN='<pat-collé-par-l-utilisateur>' powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$BIN/asana-cred.ps1" -Action store
 ```
-Le PAT Asana est full-access (pas de read-only) ; il est stocké chiffré (vault utilisateur Windows).
+Le PAT Asana est full-access (pas de read-only) ; stocké chiffré (vault utilisateur Windows), jamais commité.
+Tout le reste (skill, module, agent) est versionné : aucun élément à retrouver/ré-injecter à part ce collage unique.
 
 ## 1. Détecter (assignés non terminés, tous workspaces, paginé)
 ```bash
