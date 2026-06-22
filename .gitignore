@@ -44,6 +44,8 @@
 # État des plugins Claude Code (reproductibilité du setup ; pas de secret)
 !/plugins/
 !/plugins/**
+# sauf blocklist.json : état runtime volatil (timestamps fetchedAt/added_at), pas de la config repro
+/plugins/blocklist.json
 
 # 3) Garde-fous : ré-exclure tout secret même s'il se glisse dans une zone whitelistée
 **/*.key
