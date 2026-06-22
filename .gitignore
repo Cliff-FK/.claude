@@ -12,6 +12,9 @@
 !/.gitignore
 !/CLAUDE.md
 
+!/rules/
+!/rules/**
+
 !/skills/
 !/skills/**
 
