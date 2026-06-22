@@ -32,7 +32,8 @@
       "Bash(cp -r ~/.claude/skills/asana-triage .claude/sync-kit/global/skills/)",
       "Bash(cp ~/.claude/agents/asana-ticket-analyzer.md .claude/sync-kit/global/agents/)",
       "Edit(~/.claude/skills/freemius/**)",
-      "Read(//c/MAMP/htdocs/webidi/lp-morphblocks/src/**)"
+      "Read(//c/MAMP/htdocs/webidi/lp-morphblocks/src/**)",
+      "Read(//c/MAMP/htdocs/**)"
     ],
     "deny": [
       "Read(**/.env)",
