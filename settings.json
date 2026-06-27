@@ -102,6 +102,15 @@
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/guard-secrets-read.ps1\""
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/log-bell-events.ps1\" pretooluse"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -123,6 +132,15 @@
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/play-sound.ps1\" always"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/log-bell-events.ps1\" notification"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -131,6 +149,10 @@
           {
             "type": "command",
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/play-sound.ps1\" stop"
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/log-bell-events.ps1\" stop"
           }
         ]
       }
