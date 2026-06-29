@@ -38,7 +38,8 @@
       "Skill(generator-critic-verifier)",
       "Skill(generator-critic-verifier:*)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Read(//c/tmp/malware-audit/extracted/**)"
     ],
     "deny": [
       "Read(**/.env)",
