@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "cliff-stack",
-  "displayName": "Cliff Stack",
-  "version": "1.0.0",
-  "description": "Stack complet : skills (builders, WordPress, business, design), agents (flotte morph-blocks, critiques, recherche) et guards PowerShell",
-  "author": { "name": "Cliff" }
-}
