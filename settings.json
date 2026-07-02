@@ -42,7 +42,8 @@
       "Read(//c/tmp/webp-src/webp-uploads/**)",
       "Skill(claude-api)",
       "Skill(claude-api:*)",
-      "Edit(~/.claude/skills/fable-mode/**)"
+      "Edit(~/.claude/skills/fable-mode/**)",
+      "Read(//c/tmp/malware-audit/extracted/**)"
     ],
     "deny": [
       "Read(**/.env)",
