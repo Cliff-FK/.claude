@@ -38,7 +38,11 @@
       "Skill(generator-critic-verifier)",
       "Skill(generator-critic-verifier:*)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Read(//c/tmp/webp-src/webp-uploads/**)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Edit(~/.claude/skills/fable-mode/**)"
     ],
     "deny": [
       "Read(**/.env)",
