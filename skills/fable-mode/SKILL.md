@@ -41,11 +41,11 @@ Préférer les skills/agents maison plutôt qu'improviser. Router par CAPACITÉ 
 - **GTM / vente / contenu** → le skill business correspondant.
 - **Création/MAJ d'un skill ou d'un agent** → le builder dédié.
 
-Fan-out ASYNC (Fable y excelle), plafond maison d'environ 10 agents par recherche, jamais plus d'un agent Playwright à la fois.
+Fan-out ASYNC (Fable y excelle), plafond maison d'environ 10 agents au TOTAL par recherche/run (motif coût, cf mémoire), jamais plus d'un agent Playwright à la fois. Bon réflexe sous Fable : dans cette enveloppe, privilégier les sous-agents PERSISTANTS à contexte gardé entre sous-tâches (économie cache-read, pas de goulot sur le plus lent) plutôt que multiplier les agents jetables. Note : les agents maison sont épinglés Opus/Sonnet par choix coût — le gain Fable vit dans l'orchestration du thread principal ; une sous-tâche capability-sensitive gagne parfois à rester dans le thread principal (Fable) plutôt qu'être déléguée à un agent Opus.
 
 ## 4. Effort et tokens
 
-**Effort : high par défaut.** C'est le défaut sur la plupart des tâches ; xhigh pour le capability-sensitive (le contexte de déclenchement de ce skill est souvent là). L'avance de Fable croît avec la longueur et la complexité de la tâche : ne pas la brider en abaissant l'effort par réflexe. Réduire à medium/low SEULEMENT si la tâche aboutit correctement mais prend plus de temps que nécessaire, ou pour du routine. Rappel : low/medium sur Fable dépassent souvent le xhigh des modèles antérieurs, donc réduire quand c'est justifié ne coûte pas d'intelligence.
+**Effort : high par défaut.** C'est le défaut sur la plupart des tâches ; xhigh pour le capability-sensitive (le contexte de déclenchement de ce skill est souvent là). L'effort se règle par tâche via /config ou le skill update-config (pas depuis ce skill) : basculer xhigh AVANT une tâche capability-sensitive longue, revenir à high ensuite. L'avance de Fable croît avec la longueur et la complexité de la tâche : ne pas la brider en abaissant l'effort par réflexe. Réduire à medium/low SEULEMENT si la tâche aboutit correctement mais prend plus de temps que nécessaire, ou pour du routine. Rappel : low/medium sur Fable dépassent souvent le xhigh des modèles antérieurs, donc réduire quand c'est justifié ne coûte pas d'intelligence.
 
 **Sortie dense, pas verbeuse** : ouvrir par l'outcome, détail ensuite. Dense ne veut PAS dire télégraphique : la lisibilité prime, couper le remplissage pas les distinctions. Le résumé FINAL d'un run long doit re-grounder complètement (le lecteur n'a pas suivi), pas rester en shorthand.
 
@@ -58,3 +58,5 @@ Fan-out ASYNC (Fable y excelle), plafond maison d'environ 10 agents par recherch
 - Ce skill NE change PAS le modèle (bascule via /model). Il n'est que la couche de calibrage, et seulement tant que le modèle courant est Fable/Mythos.
 - **Refus / fallback silencieux hors de portée du prompt** : les classifieurs de sécurité Fable (bio/cyber) peuvent produire un refus et rerouter vers Opus 4.8, en lisant le contexte workspace avant la requête. Un refus n'est pas un bug du skill. Surveiller un stop_reason de refus ou un ton soudain plus prudent ; ne pas formuler une tâche légitime comme du tooling d'exploit.
 - Contraintes maison actives (déjà dans le CLAUDE.md, non ré-énumérées ici) : français, contenu sans marqueurs IA, DRY. Elles vont dans le même sens que le remède verbosité Fable (pas d'arrow-chains, pas de compounds à tirets).
+- Un blocage de hook (git destructif, secrets, write-scope) est un point d'arrêt LÉGITIME au sens de l'anti-stop-prématuré (bloqué sur une entrée que seul l'utilisateur peut fournir), pas un obstacle à contourner ni une raison de trimmer le travail.
+- Les 3 portes anti-faux-positif du CLAUDE.md sont capacité-NEUTRES (actions + mesure, pas transcription de raisonnement) : les conserver telles quelles sous Fable, elles ne comptent pas parmi les consignes à lâcher.

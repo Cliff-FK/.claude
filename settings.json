@@ -23,27 +23,18 @@
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/scss/generics/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/js/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/**)",
-      "Edit(~/.claude/skills/asana-triage/**)",
-      "Bash(mkdir -p /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/skills /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/agents)",
-      "Bash(cp -r ~/.claude/skills/asana-triage /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/skills/)",
-      "Bash(cp ~/.claude/agents/asana-ticket-analyzer.md /c/MAMP/htdocs/wmki/wp-builder-2026/.claude/agents/)",
-      "Edit(/.claude/skills/asana-triage/**)",
-      "Bash(mkdir -p .claude/sync-kit/global/agents)",
-      "Bash(cp -r ~/.claude/skills/asana-triage .claude/sync-kit/global/skills/)",
-      "Bash(cp ~/.claude/agents/asana-ticket-analyzer.md .claude/sync-kit/global/agents/)",
-      "Edit(~/.claude/skills/freemius/**)",
-      "Read(//c/MAMP/htdocs/webidi/lp-morphblocks/src/**)",
       "Read(//c/MAMP/htdocs/**)",
-      "Bash(awk '{print $5, $6, $7, $8, $9}')",
+      "Edit(~/.claude/skills/asana-triage/**)",
+      "Edit(~/.claude/skills/freemius/**)",
+      "Edit(~/.claude/skills/fable-mode/**)",
+      "Edit(~/.claude/skills/agent-builder/**)",
+      "Edit(~/.claude/skills/skill-builder/**)",
       "Skill(generator-critic-verifier)",
       "Skill(generator-critic-verifier:*)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Read(//c/tmp/webp-src/webp-uploads/**)",
       "Skill(claude-api)",
-      "Skill(claude-api:*)",
-      "Edit(~/.claude/skills/fable-mode/**)",
-      "Read(//c/tmp/malware-audit/extracted/**)"
+      "Skill(claude-api:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -159,5 +150,6 @@
     ]
   },
   "language": "french",
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "model": "claude-fable-5[1m]"
 }

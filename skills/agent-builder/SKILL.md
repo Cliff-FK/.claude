@@ -51,6 +51,7 @@ Viser la **densité sémantique**, jamais la brièveté pour elle-même. Les mod
 - **Garder intact** : distinctions fines, invariants, **négations critiques** (« never delete », « ≠ fail-into-paid ») — c'est le contenu, pas du style.
 - **Interdit** : monosyllabique/charabia dense qui sacrifie une nuance. Sous la *token complexity* intrinsèque de la tâche, la qualité chute → ne pas comprimer en-dessous.
 - **Mesure** : JAMAIS par nb de caractères (métrique-proxy). Un prompt n'est « trop long » que si la passe adverse (§7) montre une instruction **diluée ou ignorée**.
+- **Garde reasoning_extraction (conformité Fable, obligatoire)** : ne JAMAIS écrire dans un agent une directive « montre / explicite / transcris ton raisonnement EN RÉPONSE ». Sous Fable 5, cette formulation déclenche un refus (fallback silencieux vers Opus). Formuler toute exigence de rigueur en **actions de preuve** (reproduire, mesurer, grep, signal direct) ; le raisonnement vit dans les thinking blocks. Reformuler la DEMANDE (paraphrase) reste OK, transcrire le RAISONNEMENT interne non.
 
 ### 6. Anti-péremption — distinguer stable vs volatil
 Ne jamais figer dans le prompt d'un agent un fait périssable comme certain (sinon il affirmera dans 1 an un fait périmé).

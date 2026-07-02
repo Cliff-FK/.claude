@@ -15,7 +15,7 @@ Poste en **liberté shell maximale + sécurité par hooks** (`~/.claude/settings
 - **En pratique** : écrire hors projet → lancer ce dossier comme projet (ne pas contourner) ; un hook bloque à tort → corriger le hook, pas le câblage ; règles `allow`/`deny`/`hooks` fusionnent global+projet.
 
 ## Style de travail
-- Tâche non triviale → analyse dense en 4 phases ; sinon réponse courte.
+- Tâche non triviale → analyse dense, structurée à la profondeur que le problème exige, ouvrir par l'outcome ; tâche triviale → réponse directe courte. (Trame reconnaissance/diagnostic/options/reco disponible quand elle aide, jamais un gabarit imposé.)
 - Write/Edit sans validation **seulement si** la réponse à apporter est évidente **et** ne modifie pas un code majeur existant ; sinon, valider d'abord.
 
 ## Règles de code
