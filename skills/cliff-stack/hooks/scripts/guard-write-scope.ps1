@@ -213,10 +213,16 @@ foreach ($pv in $collectedPaths) {
 # --- 2c. Anti-contournement : cd hors-projet, sous-shells dangereux -----------
 # `cd <ailleurs> && <destructif>` : si on change de répertoire vers un path
 # absolu hors-projet juste avant une commande destructrice, on bloque.
-if ($cmd -match '(?i)\b(cd|Set-Location|chdir|pushd)\s+(["'']?)([A-Za-z]:[\\/][^\s"''&|;]+|/[a-z]/[^\s"''&|;]+)') {
-    $cdTarget = $matches[3]
-    if (-not (Is-PathInProject $cdTarget)) {
-        Reject "BLOQUÉ (cd vers '$cdTarget' hors projet avant une commande destructrice). Lance ce dossier comme projet Claude."
+if ($cmd -match '(?i)\b(cd|Set-Location|chdir|pushd)\s+(?:"([^"]+)"|''([^'']+)''|([^\s"''&|;]+))') {
+    # Cible quote-aware : entre guillemets doubles, simples, ou nue — un chemin
+    # avec espaces type "C:\Users\Cliff Rob\..." se capture en entier.
+    $cdTarget = if ($matches[2]) { $matches[2] } elseif ($matches[3]) { $matches[3] } else { $matches[4] }
+    # Ne juger que les chemins ABSOLUS (C:\... ou /c/...), comme avant : un cd
+    # relatif reste dans le répertoire courant déjà contrôlé.
+    if ($cdTarget -match '^(?:[A-Za-z]:[\\/]|/[a-z]/)') {
+        if (-not (Is-PathInProject $cdTarget)) {
+            Reject "BLOQUÉ (cd vers '$cdTarget' hors projet avant une commande destructrice). Lance ce dossier comme projet Claude."
+        }
     }
 }
 # rm récursif/forcé dont la CIBLE est une substitution non résolue (cible non vérifiable).
