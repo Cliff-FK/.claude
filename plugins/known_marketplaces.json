@@ -1,0 +1,10 @@
+{
+  "cliff-fk": {
+    "source": {
+      "source": "github",
+      "repo": "Cliff-FK/claude-plugins"
+    },
+    "installLocation": "C:\\Users\\Cliff Rob\\.claude\\plugins\\marketplaces\\cliff-fk",
+    "lastUpdated": "2026-07-02T10:21:02.529Z"
+  }
+}

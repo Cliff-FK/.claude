@@ -24,17 +24,13 @@
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/js/**)",
       "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/**)",
       "Read(//c/MAMP/htdocs/**)",
-      "Edit(~/.claude/skills/asana-triage/**)",
-      "Edit(~/.claude/skills/freemius/**)",
-      "Edit(~/.claude/skills/fable-mode/**)",
-      "Edit(~/.claude/skills/agent-builder/**)",
-      "Edit(~/.claude/skills/skill-builder/**)",
       "Skill(generator-critic-verifier)",
       "Skill(generator-critic-verifier:*)",
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Skill(claude-api)",
-      "Skill(claude-api:*)"
+      "Skill(claude-api:*)",
+      "Edit(~/.claude/skills/cliff-stack/**)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -76,80 +72,19 @@
       "c:\\Users\\Cliff Rob\\.claude"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "enableAllProjectMcpServers": true,
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/phpcs-wp-native.ps1\""
-          }
-        ]
+  "enabledPlugins": {
+    "cliff-stack@cliff-fk": false
+  },
+  "extraKnownMarketplaces": {
+    "cliff-fk": {
+      "source": {
+        "source": "github",
+        "repo": "Cliff-FK/claude-plugins"
       }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/guard-write-scope.ps1\""
-          },
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/guard-secrets-read.ps1\""
-          },
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/guard-git-destructive.ps1\""
-          }
-        ]
-      },
-      {
-        "matcher": "AskUserQuestion|ExitPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/play-sound.ps1\" always"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/turn-timer.ps1\""
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "permission_prompt|idle_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/play-sound.ps1\" always"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/play-sound.ps1\" stop"
-          }
-        ]
-      }
-    ]
+    }
   },
   "language": "french",
-  "effortLevel": "high",
-  "model": "claude-fable-5[1m]"
+  "effortLevel": "high"
 }

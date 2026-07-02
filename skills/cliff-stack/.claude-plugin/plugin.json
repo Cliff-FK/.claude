@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "cliff-stack",
+  "displayName": "Cliff Stack",
+  "version": "1.1.0",
+  "description": "Stack complet : 23 skills, 16 agents, 6 hooks (guards securite, son, timer, phpcs) et assets",
+  "author": { "name": "Cliff" }
+}
