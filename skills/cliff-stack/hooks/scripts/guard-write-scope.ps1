@@ -54,6 +54,16 @@ if ($hasProject) {
             $projectDb = $matches[1].ToLower()
         }
     }
+    # Projets NON-WordPress (Astro/Node avec DB) : opt-in EXPLICITE par projet via
+    # .claude/allowed-db (1 nom de DB par ligne, commentaires # ignorés). Même garantie
+    # que wp-config : seule LA DB déclarée du projet est modifiable, rien d'autre.
+    if (-not $projectDb) {
+        $allowedDbFile = Join-Path $env:CLAUDE_PROJECT_DIR '.claude\allowed-db'
+        if (Test-Path $allowedDbFile) {
+            $line = (Get-Content $allowedDbFile | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' } | Select-Object -First 1)
+            if ($line) { $projectDb = $line.Trim().ToLower() }
+        }
+    }
 }
 
 # --- Helpers -------------------------------------------------------------------
