@@ -38,7 +38,9 @@
       "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/01-overlay-checkout-fr.png\" /c/tmp/validation-lang-morphblocks/)",
       "Read(//c/tmp/validation-lang-morphblocks//**)",
       "Skill(artifact-design)",
-      "Skill(artifact-design:*)"
+      "Skill(artifact-design:*)",
+      "Bash(cd \"c:/MAMP/htdocs/wmki/wp-builder-2026\" && git diff wp-content/plugins/morph-blocks/readme.txt | head -15 && mv qlprobe-375-cssrouting-on.png qlprobe-375-mobile-right.png \"/c/Users/Cliff Rob/.claude/playwright-output/\" && echo \"--- screenshots déplacés vers playwright-output ---\")",
+      "Bash(mv /c/MAMP/htdocs/wmki/wp-builder-2026/fpgate-375-center-firstpaint.png \"/c/Users/Cliff Rob/.claude/playwright-output/fpgate-375-center-firstpaint.png\" *)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -78,10 +80,11 @@
     "additionalDirectories": [
       "~/.claude",
       "c:\\Users\\Cliff Rob\\.claude",
-      "C:\\Users\\Cliff Rob\\.claude\\playwright-output"
+      "C:\\Users\\Cliff Rob\\.claude\\playwright-output",
+      "C:\\Users\\Cliff Rob\\.claude\\playwright-output\\"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "enableAllProjectMcpServers": true,
   "language": "french",
   "effortLevel": "high"
