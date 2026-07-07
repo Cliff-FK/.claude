@@ -43,6 +43,21 @@ $allowedRoots += 'c:\tmp'
 # Dossier de config Claude (déjà dans additionalDirectories) : skills, hooks,
 # memory, sorties MCP (ex. playwright-output). Écriture shell autorisée ici.
 if ($env:USERPROFILE) { $allowedRoots += (Join-Path $env:USERPROFILE '.claude').ToLower() }
+# Zones ADDITIONNELLES optionnelles (~/.claude/write-scope-extra-roots.txt : 1 chemin par ligne,
+# lignes # = commentaires). Étend le périmètre SANS modifier ce hook — pour les répertoires de
+# travail légitimes hors racine web explicitement demandés par l'utilisateur (ex. un projet sur
+# le Bureau). Sémantique = préfixe de chaîne, comme les autres roots. Fichier absent = aucun effet.
+if ($env:USERPROFILE) {
+    $extraRootsFile = Join-Path $env:USERPROFILE '.claude\write-scope-extra-roots.txt'
+    if (Test-Path $extraRootsFile) {
+        foreach ($extraLine in (Get-Content $extraRootsFile -ErrorAction SilentlyContinue)) {
+            $extraLine = "$extraLine".Trim()
+            if ($extraLine -and -not $extraLine.StartsWith('#')) {
+                $allowedRoots += (($extraLine -replace '/','\').TrimEnd('\').ToLower())
+            }
+        }
+    }
+}
 
 # Détection DB MySQL projet (lecture wp-config.php)
 $projectDb = $null

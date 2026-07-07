@@ -1,0 +1,52 @@
+{
+  "skill": "godot-gamedev",
+  "notes": "Baseline établie le 2026-07-07 avec agents Sonnet session fraîche sans skill, binaire Godot 4.7-stable local. Workdir évals : c:/tmp/eval-*",
+  "evals": [
+    {
+      "id": "tscn-text-authoring",
+      "query": "Dans le projet Godot situé à <PROJET>, crée SANS ouvrir l'éditeur une scène game/scenes/crate.tscn : un RigidBody3D racine nommé Crate avec un CollisionShape3D (BoxShape3D 1x1x1) et un MeshInstance3D (BoxMesh), plus un script GDScript attaché qui log sa position à ready. Valide que la scène charge réellement. Binaire Godot : <GODOT>.",
+      "expected_behavior": [
+        "Syntaxe .tscn format=3 correcte : [gd_scene load_steps=N format=3], ext_resource pour le script avec type=\"Script\", sub_resource BoxShape3D/BoxMesh, node hiérarchie avec parent=\".\"",
+        "load_steps cohérent (nb ext_resource + sub_resource + 1)",
+        "Validation RÉELLE : godot --headless --import puis exécution/chargement de la scène (pas une simple relecture du fichier)",
+        "Sait que le premier import peut nécessiter deux passes et que l'exit code peut mentir ; vérifie un signal direct (sortie du log attendu)"
+      ]
+    },
+    {
+      "id": "asset-pipeline-headless",
+      "query": "J'ai ajouté game/assets/chair.glb dans le projet Godot <PROJET>. Fais en sorte qu'il soit utilisable et que le projet reste sain en CI headless (import + un test qui instancie la scène du glb). Binaire : <GODOT>.",
+      "expected_behavior": [
+        "Lance godot --headless --import après l'ajout (sait que sans ça, tout run headless suivant casse)",
+        "Sait que les .import/.uid générés doivent être versionnés, mais pas .godot/",
+        "Ne se fie pas au seul exit code (vérifie l'artefact .godot/imported/ ou charge la ressource)",
+        "Test qui charge réellement res://assets/chair.glb (load + instantiate + assertion)"
+      ]
+    },
+    {
+      "id": "uid-rename-trap",
+      "query": "Dans le projet Godot <PROJET>, renomme game/scripts/npc_brain.gd en game/scripts/npc_ai.gd et mets à jour ce qu'il faut. Le script est référencé par une scène.",
+      "expected_behavior": [
+        "Déplace AUSSI le fichier sidecar npc_brain.gd.uid (ou sait le régénérer proprement)",
+        "Met à jour les références ext_resource path dans les .tscn qui pointent vers l'ancien chemin",
+        "Revalide en headless après le rename"
+      ]
+    },
+    {
+      "id": "ragdoll-netcode-pattern",
+      "query": "Dans mon jeu Godot 4.7 coop 4 joueurs (high-level multiplayer API, hôte autoritaire), les PNJ passent en ragdoll quand on les frappe et sont projetés. Comment synchroniser ça entre les joueurs ? Donne l'architecture précise et le code des nœuds/RPC.",
+      "expected_behavior": [
+        "NE réplique PAS les bones du ragdoll via MultiplayerSynchronizer (bande passante + flicker documenté RigidBody3D)",
+        "Pattern : RPC fiable de l'événement d'impact (id PNJ, impulsion, point) + simulation ragdoll locale sur chaque client",
+        "Resync basse fréquence de la racine seulement si le corps a un enjeu gameplay",
+        "Génération/état partagé déterministe par seed répliquée si pertinent ; joueurs restent CharacterBody3D synchronisés"
+      ]
+    },
+    {
+      "id": "should-not-trigger",
+      "query": "Crée un composant React avec un carrousel d'images accessible.",
+      "expected_behavior": [
+        "Le skill godot-gamedev ne se déclenche pas"
+      ]
+    }
+  ]
+}

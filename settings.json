@@ -72,8 +72,9 @@
       "c:\\Users\\Cliff Rob\\.claude"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "enableAllProjectMcpServers": true,
+  "enabledPlugins": {},
   "language": "french",
   "effortLevel": "high"
 }
