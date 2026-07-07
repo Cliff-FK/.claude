@@ -30,7 +30,17 @@
       "Skill(update-config:*)",
       "Skill(claude-api)",
       "Skill(claude-api:*)",
-      "Edit(~/.claude/skills/cliff-stack/**)"
+      "Edit(~/.claude/skills/cliff-stack/**)",
+      "Bash(mv audit-mb-account-360.png audit-mb-login-dark.png audit-mb-modal-cancel-sub.png /c/tmp/audit-design-morphblocks/)",
+      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/page-2026-07-02T18-10-06-767Z.png\" /c/tmp/audit-design-morphblocks/account-factures-360-header-tronque.png)",
+      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/page-2026-07-02T18-12-08-975Z.png\" /c/tmp/audit-design-morphblocks/tarifs-412-burger-hors-ecran.png)",
+      "Read(//c/tmp/audit-design-morphblocks//**)",
+      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/01-overlay-checkout-fr.png\" /c/tmp/validation-lang-morphblocks/)",
+      "Read(//c/tmp/validation-lang-morphblocks//**)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(cd \"c:/MAMP/htdocs/wmki/wp-builder-2026\" && git diff wp-content/plugins/morph-blocks/readme.txt | head -15 && mv qlprobe-375-cssrouting-on.png qlprobe-375-mobile-right.png \"/c/Users/Cliff Rob/.claude/playwright-output/\" && echo \"--- screenshots déplacés vers playwright-output ---\")",
+      "Bash(mv /c/MAMP/htdocs/wmki/wp-builder-2026/fpgate-375-center-firstpaint.png \"/c/Users/Cliff Rob/.claude/playwright-output/fpgate-375-center-firstpaint.png\" *)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -69,7 +79,9 @@
     ],
     "additionalDirectories": [
       "~/.claude",
-      "c:\\Users\\Cliff Rob\\.claude"
+      "c:\\Users\\Cliff Rob\\.claude",
+      "C:\\Users\\Cliff Rob\\.claude\\playwright-output",
+      "C:\\Users\\Cliff Rob\\.claude\\playwright-output\\"
     ]
   },
   "model": "opus[1m]",

@@ -69,6 +69,16 @@ if ($hasProject) {
             $projectDb = $matches[1].ToLower()
         }
     }
+    # Projets NON-WordPress (Astro/Node avec DB) : opt-in EXPLICITE par projet via
+    # .claude/allowed-db (1 nom de DB par ligne, commentaires # ignorés). Même garantie
+    # que wp-config : seule LA DB déclarée du projet est modifiable, rien d'autre.
+    if (-not $projectDb) {
+        $allowedDbFile = Join-Path $env:CLAUDE_PROJECT_DIR '.claude\allowed-db'
+        if (Test-Path $allowedDbFile) {
+            $line = (Get-Content $allowedDbFile | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' } | Select-Object -First 1)
+            if ($line) { $projectDb = $line.Trim().ToLower() }
+        }
+    }
 }
 
 # --- Helpers -------------------------------------------------------------------
@@ -159,18 +169,25 @@ if ($cmd -match '\b(mysql|mysqldump|mariadb)(\.exe)?\b') {
     if ($cmd -match '--database[=\s]+(\S+)')                 { $targetDb = $matches[1] }
     elseif ($cmd -match '\s-D\s*(\S+)')                      { $targetDb = $matches[1] }
     elseif ($cmd -match "USE\s+``?([a-zA-Z0-9_\-]+)``?")     { $targetDb = $matches[1] }
+    # Forme POSITIONNELLE (la plus courante : `mysql -u root -proot NOMDB -e "..."`) :
+    # le nom de DB nu juste avant -e/--execute (jamais précédé de -u/-h/-P, dont les
+    # valeurs collent à l'option ou sont capturées par le lookbehind négatif).
+    elseif ($cmd -match "(?<!-[a-zA-Z]|--[a-z\-]{2,20})\s([a-zA-Z0-9_$\-]+)\s+(?:-[NB]\s+)*(-e|--execute)\b") { $targetDb = $matches[1] }
     $sqlPayload = ''
     if ($cmd -match "(-e|--execute)\s+[`"']([^`"']+)[`"']") { $sqlPayload = $matches[2] }
     if ($cmd -match "(?i)\b(DROP|CREATE|INSERT|UPDATE|DELETE|TRUNCATE|ALTER|GRANT|REVOKE|RENAME)\b") {
         if ($targetDb) { $targetDb = $targetDb.ToLower().Trim('`','"',"'") }
         if (-not $projectDb) {
-            Reject "MySQL write bloqué : pas de DB_NAME dans wp-config.php pour comparer. cmd: $($cmd.Substring(0,[Math]::Min(160,$cmd.Length)))"
+            Reject "MySQL write bloqué : pas de DB projet déclarée (wp-config.php DB_NAME ou .claude/allowed-db). cmd: $($cmd.Substring(0,[Math]::Min(160,$cmd.Length)))"
         }
         if ($targetDb -and $targetDb -ne $projectDb) {
             Reject "MySQL write bloqué : DB cible '$targetDb' != DB projet '$projectDb'"
         }
-        if (-not $targetDb -and $sqlPayload -match "(?i)\b(DROP\s+DATABASE|CREATE\s+DATABASE)\b") {
-            Reject "MySQL DROP/CREATE DATABASE bloqué hors scope projet"
+        # FAIL-CLOSED : un write dont la DB cible est indéterminable (ni option, ni USE,
+        # ni positionnelle) peut viser n'importe quelle base (ex. table qualifiée
+        # `autre_db.table`) → bloqué plutôt que présumé sain.
+        if (-not $targetDb) {
+            Reject "MySQL write bloqué : DB cible indéterminable (utilise `mysql <db> -e ...`, -D ou USE). cmd: $($cmd.Substring(0,[Math]::Min(160,$cmd.Length)))"
         }
     }
 }

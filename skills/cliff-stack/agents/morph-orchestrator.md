@@ -74,12 +74,46 @@ The recurring failure mode of single-agent static analysis is the **false positi
 
 If a finding lacks any of these, do NOT relay it — send it back to a *different* agent to refute or complete. A finding the critic kills is reported as a **refuted false positive** (so the user knows it was checked and dismissed), never silently dropped and never escalated as real. You are the gate that turns "looks abnormal" into "proven harmful or proven harmless".
 
+## SYSTEMIC AXES SWEEP — mandatory at every design validation and every fix gate
+
+The adversarial pass above kills false positives in what the producer CLAIMED. It does nothing
+against what nobody claimed: the **omission**. Real misses that motivated this section (2026-07-04):
+the Query-Loop hole of the CSS channels and the duotone coverage gap both pre-existed, survived
+several diff-scoped adversarial passes, and were found late or by an outside conversation.
+
+**HARD RULE**: for any design validation or fix gate, dispatch (in addition to the finding-refutation
+critic) one dedicated **sweep critic** that walks this CLOSED axis list and returns, PER AXIS, either
+`covered (proof)` or `out-of-scope (explicit reason)`. An axis silently skipped = the sweep is FAIL.
+
+1. **Multi-post surfaces**: Query Loop, archives, synced patterns — for EACH emission channel touched
+   (JS registry, `@media` css, supports-css, any asset). Host vs inner-post scoping AND freshness
+   (built-into-host = STALE when the inner post changes ; consolidated-at-serve = live). The matrix
+   `queryloop` case covers the JS channel only — never assume it covers a new channel.
+2. **Trigger axis**: every save path (REST UI, wp_update_post, CLI/cron user-0, import, revision
+   restore) for any build-side change (contract #7, applied as a sweep axis).
+3. **CSS/block-supports typologies — exhaustive from core**: layout, spacing, typography, colors,
+   border, shadow, background, elements, position, **filter/duotone**. A variant typology the change
+   does not handle must be listed as a documented limitation, not discovered by a user.
+4. **Out-of-block asset dependencies**: a variant may depend on assets emitted only for the rendered
+   (desktop) state — duotone SVG defs, preset custom properties, fonts. Swap-the-class is not enough.
+5. **Viewport round-trip AND first-paint**: desktop→tablet→mobile→desktop by resize, plus RELOAD at
+   small viewport (prepaint/@media path ≠ resize path).
+6. **Gating per plan on every NEW emission channel**: anything that emits variant data must pass
+   through (or provably not need) `serve_degrade_decision` — free AND paid plans probed.
+7. **Compiled-value needles**: assertions must target what WP COMPILES, never the attr value
+   (`right`→`justify-content:flex-end`, vertical orientation→`align-items`, preset→`var(--wp--…)`).
+   An assert on the raw attr value is an invalid probe.
+8. **Fixture discipline**: test fixtures are destroyed ONLY after every unexpected observation has
+   been explained. An unexplained extra occurrence in the output = investigation not finished.
+9. **Legacy/format compat**: every persisted-format change probed against the previous cls-N cache
+   (read tolerance) and the SCHEMA_VER stale-guard path.
+
 ## Your workflow (orchestrate, converge, gate)
 
 1. **Triage & scope**: classify the request into zone(s). Read `constants.php` + the relevant cross-zone contracts. State which zones are *primary* (must change) and which are *impacted* (must be re-validated even if untouched).
 2. **Surface the seams**: list every cross-zone contract the change can break, as explicit guardrails. This list is mandatory output — it's the whole point of an orchestrator.
 3. **Dispatch the PRODUCER**: delegate the diagnosis/fix proposal to the primary zone agent(s) via the Agent tool, handing them the guardrails. Multiple independent zones → parallel Agent calls in one message. Dependent zones → sequential (feed each agent the prior one's output).
-4. **Dispatch the CRITIC (adversarial) — ALWAYS, even for a "clear" finding**: separately task a critic — a *different* zone agent or the generalist auditor — to REFUTE the producer's conclusion by direct signal, attacking exactly the seams from step 2 (e.g. "prove the sig is still byte-identical", "prove the cache is untouched on downgrade", "find a save path that bypasses the rebuild", "prove this is not WP-native baseline behavior", "find the other consumer of this flag"). The critic wins by finding a red cell, not by agreeing — instruct it explicitly to default to "false positive unless I can prove harm". This pass is NOT skippable: the false positives this fleet exists to catch are exactly the findings that "looked obvious". NEVER run two Playwright agents at once (shared browser/admin session → false positives); serialize any live-browser critic.
+4. **Dispatch the CRITIC (adversarial) — ALWAYS, even for a "clear" finding** — AND the **sweep critic** (Systemic Axes Sweep above) as a separate task: the refutation critic attacks what was claimed, the sweep critic hunts what was omitted. Both are mandatory; neither substitutes for the other. The refutation critic is a *different* zone agent or the generalist auditor tasked to REFUTE the producer's conclusion by direct signal, attacking exactly the seams from step 2 (e.g. "prove the sig is still byte-identical", "prove the cache is untouched on downgrade", "find a save path that bypasses the rebuild", "prove this is not WP-native baseline behavior", "find the other consumer of this flag"). The critic wins by finding a red cell, not by agreeing — instruct it explicitly to default to "false positive unless I can prove harm". This pass is NOT skippable: the false positives this fleet exists to catch are exactly the findings that "looked obvious". NEVER run two Playwright agents at once (shared browser/admin session → false positives); serialize any live-browser critic.
 5. **Converge**: if producer and critic disagree, re-task with the specific contested signal until they converge on a DIRECT semantic measurement (the actual variant text in the actual viewport / the actual cache row / the actual emitted registry), never a proxy (length, flag, timestamp). Treat every diagnosis as a HYPOTHESIS until measured.
 6. **GATE with end-to-end chains**: before any "resolved", require chain validation **admin→save/cache→front in BOTH directions** with a REAL UI save (real click, never programmatic — that skips `preSavePost`/`rest_after_insert`). Delegate this to `regression-tester` (the save-path × viewport matrix IS your gate). Each link validated as a function of the previous; a broken link localizes the broken transition. An untested path is a FAIL, not "n/a".
 7. **Verdict**: only then relay a verdict, with the evidence trail and the residual risks (open questions per zone).
