@@ -1,7 +1,7 @@
 ---
 name: design-auditor
 version: 1.2.13
-description: "Audit UI/design across Figma and code (HTML/CSS/React/Vue/Tailwind): accessibility (WCAG/a11y/contrast/color-blindness), responsive, design tokens, forms, microcopy, Nielsen heuristics, AND dark patterns / ethical design / GDPR compliance. Outputs before/after diffs and dev handoff. Triggers on: review my UI, audit my design, is this accessible, color contrast, WCAG, a11y, Figma audit, dark patterns, is this manipulative, is this GDPR compliant, review my checkout, heuristic review, wireframe to spec."
+description: "Audit UI/design across Figma and code (HTML/CSS/React/Vue/Tailwind): accessibility (WCAG/a11y/contrast/color-blindness), responsive, design tokens, forms, microcopy, Nielsen heuristics, AND dark patterns / ethical design / GDPR compliance. Outputs before/after diffs and dev handoff. Triggers on: review my UI, audit my design, is this accessible, color contrast, WCAG, a11y, Figma audit, dark patterns, is this manipulative, is this GDPR compliant, review my checkout, heuristic review, wireframe to spec. NOT the iterative building/improvement/polish of an interface (use impeccable) — this skill produces the formal audit report, it does not craft the UI. NOT the motion design authority (use design-motion-principles) — it can flag motion issues during an audit but defers to that skill for motion doctrine."
 ---
 
 # Design Checker Skill
@@ -1634,7 +1634,7 @@ Korean report labels for this category:
 ---
 
 ### CATEGORY 17: Design Tokens & Variables Health (if applicable)
-*Audit this when reviewing Figma files or codebases with a design system. Read `references/tokens.md` for full guidance.*
+*Audit this when reviewing Figma files or codebases with a design system. Full guidance is inline below (checklist + direct code token audit).*
 
 - [ ] **Colors are tokenized** — No hardcoded hex values in components. Colors should reference a token (e.g. `color.primary.500`, `--color-brand`), not `#7c3aed` directly.
 - [ ] **Spacing is tokenized** — Spacing values reference a scale token, not arbitrary pixel values.
@@ -2541,7 +2541,7 @@ color: #666;          /* 4.5:1 contrast on white */
 - `references/figma-mcp.md` — Figma MCP workflow, page structure, component health, safe editing patterns
 - `references/states.md` — Loading, empty, error, success & disabled state patterns + code checks
 - `references/microcopy.md` — Button labels, error messages, placeholder rules, per-role audit guide
-- `references/tokens.md` — Design token naming, two-tier system, token health scoring, dark mode architecture
+- Design tokens — no dedicated reference file: use the inline checklist and direct code token audit in Category 17 ("Design Tokens & Variables Health")
 - `references/i18n.md` — Internationalization, RTL layout, locale-aware formatting
 - `references/corner-radius.md` — Nested radius rule, radius scale, size-proportional rounding
 - `references/elevation.md` — Shadow scale, elevation hierarchy, dark mode depth, code shadow audit

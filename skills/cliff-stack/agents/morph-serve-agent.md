@@ -46,7 +46,7 @@ For each **seen** sig in the SSR, in `wp_footer`:
 ## Key files (paths to resolve under the plugin dir)
 
 - `includes/runtime-serve.php` — **the zone**: the 6 front hooks + helpers `morph_blocks_strip_css_props_from_root`, `morph_blocks_replace_sig_subtree`/`morph_blocks_match_close_tag`, `morph_blocks_host_post_id`, `morph_blocks_in_loop`, `morph_blocks_runtime_sigs_seen_ref`, `morph_blocks_css_important`.
-- `includes/prepaint.php` — inline anti-flash snippet (`morph_blocks_prepaint_arm` / `morph_blocks_prepaint_emit`), MutationObserver before first paint, sets `window.__morphBlocksInit`.
+- `includes/prepaint.php` — inline anti-flash snippet (`morph_blocks_prepaint_arm` / `morph_blocks_prepaint_emit`), MutationObserver before first paint, poses `data-morph-applied` on each swapped root (idempotence contract respected by store.js; `window.__morphBlocksInit` no longer exists — re-verify by grep, never assume from this doc).
 - `includes/render-mutate.php` — consumed helpers: `morph_blocks_pose_marker`, `morph_blocks_sig_is_css_routed`, `morph_blocks_block_has_variant_or_js`, `morph_blocks_merge_inline_style`, `morph_blocks_clean_dom_at_serve`. **Modifying these helpers changes this zone — flag it.**
 - `includes/constants.php` — single source of truth for all DOM ids/markers/keys/SCHEMA_VER.
 - `includes/viewport.php` — `morph_blocks_get_viewport()` breakpoints (must match @media CSS *and* `window.morphBlocksBp`).
@@ -76,8 +76,8 @@ For each **seen** sig in the SSR, in `wp_footer`:
 
 ## Known soft spots to probe (don't assume they're fine)
 
-- **Cross-post leak at prepaint**: prepaint `readReg()` does `querySelectorAll('script[id^="morph-blocks-"]')` and merges ALL JSON blobs WITHOUT the footer's `$sigs_seen` filter ⇒ on archives/multi-post pages, other posts' sigs are merged. The non-leak invariant SERVE claims for the footer is NOT carried by prepaint. Verify empirically on an archive.
-- **Phantom `__morphBlocksInit` contract**: SERVE/prepaint set `window.__morphBlocksInit`, but `store.js` never reads it (grep = zero) ⇒ systematic double-swap (idempotent via morphdom but costly). Either implement the skip or drop the claim.
+- **Cross-post isolation at prepaint — historical bug (fixed as of 2026-07, re-verify before claiming)**: prepaint `readReg()` does `querySelectorAll('script[id^="morph-blocks-"]')` and merges ALL JSON blobs WITHOUT the footer's `$sigs_seen` filter, so per-post isolation rests on the per-occurrence content-fingerprint guard (`trusted()`/`fp()` in the inline snippet), which closed the archive/Query-Loop content-cloning bug. The invariant: prepaint must never apply another post's content — any prepaint/registry change must preserve it. Grep both sides at runtime and verify empirically on an archive; never assume current state from this doc.
+- **Prepaint↔store idempotence — historical bug (fixed as of 2026-07, re-verify before claiming)**: prepaint set `window.__morphBlocksInit` that `store.js` never read ⇒ systematic double-swap (idempotent via morphdom but costly). The current contract is `data-morph-applied` posed by prepaint and respected by store.js; `__morphBlocksInit` no longer exists in the plugin. Grep both sides at runtime, never assume current state from this doc.
 - `morph_blocks_match_close_tag()` doesn't handle HTML5 void elements without `/>` (`<hr>`, `<img>` as a root tag) ⇒ depth corruption in subtree scrub. Rare in practice, untested.
 - Scrub complexity is O(N sigs × M blocked leaves × html length) — measure on a heavy free-plan post.
 - Inline prepaint snippet has no CSP nonce ⇒ blocked under a strict Content-Security-Policy.
@@ -97,7 +97,7 @@ For each **seen** sig in the SSR, in `wp_footer`:
 - For **reproducing a bug** (real Playwright clicks, Ctrl+S, resize), **DB cache inspection**, or a broad "why does X not work" investigation that spans zones ⇒ that's **`morph-blocks-auditor`**. Don't re-implement its workflow; either invoke it or follow it.
 - For **end-to-end chain validation** (admin→save/cache→front, both directions, REAL UI save) and the **trigger-axis** discipline ⇒ that's **`regression-tester`**. Never declare "resolved" by proxy.
 - For tracing **how Gutenberg registers/restitutes a block** through render_block ⇒ **`wp-block-pipeline-tracer`**.
-- For **WordPress/Gutenberg API ground truth** (render_block filter order, WP_Block_Supports in SSR, `WP_HTML_Tag_Processor`) ⇒ the **`wp-native`** skill, and Context7 (`/wordpress/gutenberg`, skip resolve-library-id, batch queries, frugal) only as the verification fallback after the code/disk is ground truth.
+- For **WordPress/Gutenberg API ground truth** (render_block filter order, WP_Block_Supports in SSR, `WP_HTML_Tag_Processor`) ⇒ the **`cliff-stack:wp-native`** skill, and Context7 (`/wordpress/gutenberg`, skip resolve-library-id, batch queries, frugal) only as the verification fallback after the code/disk is ground truth.
 - Prefer updating an existing `morph_blocks_*` helper over adding code.
 - Never run more than one Playwright agent at a time (shared browser/admin session → false positives).
 

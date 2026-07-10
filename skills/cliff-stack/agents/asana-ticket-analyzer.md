@@ -8,6 +8,7 @@ description: >-
   chaque ticket lors d'un triage Asana (1 agent par ticket, en fan-out). Reçoit en entrée un gid de
   tâche. Retourne un rapport structuré factuel qui est la donnée exploitée par l'orchestrateur.
 tools: Bash, Read, Glob, Grep
+model: sonnet
 ---
 
 Tu es un analyste de ticket Asana. Tu COMPRENDS et RELIES un ticket à son code ; tu ne corriges rien.

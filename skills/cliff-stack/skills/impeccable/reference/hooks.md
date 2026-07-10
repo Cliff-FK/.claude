@@ -1,3 +1,5 @@
+> **Path convention**: `<SKILL_DIR>` = the absolute directory of this skill's SKILL.md (global plugin, not the project). Substitute before running any command below.
+
 # /impeccable hooks
 
 Manage the **design detector hook** for the current project.
@@ -33,7 +35,7 @@ The first argument is the action. Defaults to `status`.
 2. Invoke the admin script and pass the user's output through verbatim:
 
    ```bash
-   node .claude/skills/impeccable/scripts/hook-admin.mjs <action> [args...]
+   node "<SKILL_DIR>/scripts/hook-admin.mjs" <action> [args...]
    ```
 
 3. If `<action>` is `off`, follow up with a one-line note: "Done. New edits will not trigger the design hook in this project until you run `/impeccable hooks on`."
@@ -56,25 +58,25 @@ Prefer the narrowest exception:
 Example value-specific exception:
 
 ```bash
-node .claude/skills/impeccable/scripts/hook-admin.mjs ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
+node "<SKILL_DIR>/scripts/hook-admin.mjs" ignore-value overused-font Inter --shared --reason "User confirmed Inter is intentional"
 ```
 
 Example intentional motion exception:
 
 ```bash
-node .claude/skills/impeccable/scripts/hook-admin.mjs ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
+node "<SKILL_DIR>/scripts/hook-admin.mjs" ignore-value bounce-easing bounce-ball --shared --reason "User confirmed ball bounce animation is intentional"
 ```
 
 Example whole-rule font exception:
 
 ```bash
-node .claude/skills/impeccable/scripts/hook-admin.mjs ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
+node "<SKILL_DIR>/scripts/hook-admin.mjs" ignore-rule overused-font --all-values --reason "User asked to ignore overused fonts generally"
 ```
 
 Example file-scoped exception:
 
 ```bash
-node .claude/skills/impeccable/scripts/hook-admin.mjs ignore-file "src/legacy/Card.tsx"
+node "<SKILL_DIR>/scripts/hook-admin.mjs" ignore-file "src/legacy/Card.tsx"
 ```
 
 ## Constraints

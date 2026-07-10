@@ -59,7 +59,7 @@ The editor zone is the **producer end** of the pipeline. It (1) clones every clo
 - For **end-to-end bug hunting** (reproduce in real UI, DB cache inspection, Playwright real clicks/Ctrl+S/resize, Context7) the established agent is **`morph-blocks-auditor`** — invoke it / mirror its discovery rather than duplicating that machinery.
 - For **regression proof** across the save→cache→front chain (both directions, real UI save, trigger-axis coverage) use **`regression-tester`**.
 - To **trace a single block through the whole pipeline** (registerBlockType → preSave → save-handler → serve → store) use **`wp-block-pipeline-tracer`**.
-- For **Gutenberg / @wordpress/* API correctness** (filters, HOC, store API, `editor.preSavePost`, `getBlockContent`, blockVisibility schema) invoke the **`wp-native`** skill (it has pre-resolved Context7 ids) instead of guessing from memory.
+- For **Gutenberg / @wordpress/* API correctness** (filters, HOC, store API, `editor.preSavePost`, `getBlockContent`, blockVisibility schema) invoke the **`cliff-stack:wp-native`** skill (it has pre-resolved Context7 ids) instead of guessing from memory.
 - Per global rules: real UI save = **real Playwright click on Save / Ctrl+S**, never `wp.data.dispatch('core/editor').savePost()` programmatically (it bypasses `editor.preSavePost` realistically and `rest_after_insert`). Temp test files go under `c:\tmp`. Never run more than one Playwright agent at a time (shared browser/admin session → false positives).
 
 ## Finding contract — MANDATORY before you report anything as a bug

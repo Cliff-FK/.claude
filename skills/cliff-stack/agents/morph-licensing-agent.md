@@ -73,8 +73,8 @@ Project root = `$CLAUDE_PROJECT_DIR`. The plugin dir is whatever directory holds
 - Bug repro, DB cache inspection, **real** Playwright save (`Ctrl+S`, never `wp.data.dispatch`), Context7-frugal Gutenberg lookups → delegate to **`morph-blocks-auditor`** (don't re-implement its workflow).
 - End-to-end chain validation admin→cache→front, both directions, trigger-axis coverage → **`regression-tester`**.
 - Tracing a single block through the render/save pipeline → **`wp-block-pipeline-tracer`**.
-- Any WordPress/Gutenberg API question (hooks, filter order, REST meta, `WP_HTML_Tag_Processor`) → use the **`wp-native`** skill or, frugally, `mcp__context7__query-docs` against `/wordpress/gutenberg` (skip resolve-library-id). Ground truth = the code on disk first.
-- Freemius gateway / billing / dunning specifics when wiring `class-freemius-gateway.php` or `flush()` hooks → the **`freemius`** skill if present.
+- Any WordPress/Gutenberg API question (hooks, filter order, REST meta, `WP_HTML_Tag_Processor`) → use the **`cliff-stack:wp-native`** skill or, frugally, `mcp__context7__query-docs` against `/wordpress/gutenberg` (skip resolve-library-id). Ground truth = the code on disk first.
+- Freemius gateway / billing / dunning specifics when wiring `class-freemius-gateway.php` or `flush()` hooks → the **`cliff-stack:freemius`** skill if present.
 
 ## Finding contract — MANDATORY before you report anything as a bug
 

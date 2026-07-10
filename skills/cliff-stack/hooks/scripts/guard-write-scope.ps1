@@ -94,8 +94,12 @@ function Reject([string]$reason) {
 function Normalize-Path([string]$path) {
     $p = $path.Trim('"',"'")
     if ($p -match '^/([a-z])/(.*)$') { $p = "$($matches[1]):\$($matches[2] -replace '/','\')" }
+    $isUnc = $p.StartsWith('\\')
     $p = $p -replace '/','\'
     $p = $p -replace '\\{2,}','\'
+    # Préserver le préfixe UNC \\serveur\share : sans lui, Is-PathInProject prendrait
+    # le chemin réseau pour un relatif et l'autoriserait d'office.
+    if ($isUnc) { $p = '\' + $p }
     return $p.ToLower()
 }
 
@@ -194,15 +198,17 @@ if ($cmd -match '\b(mysql|mysqldump|mariadb)(\.exe)?\b') {
 
 # --- 2. Détection commandes destructives + extraction paths --------------------
 # Paths NON quotés (s'arrêtent au 1er espace/séparateur)
-$pathRegex = '(?:[A-Za-z]:[\\/][^\s"''<>|;`&]+|/[a-z]/[^\s"''<>|;`&]+|//[a-z]/[^\s"''<>|;`&]+)'
-# Paths QUOTÉS (peuvent contenir des espaces) : "C:\a b\c", '/c/a b/c'. Capture l'intérieur.
-$quotedPathRegex = '["'']((?:[A-Za-z]:[\\/]|//?[a-z]/)[^"'']*)["'']'
+$pathRegex = '(?:[A-Za-z]:[\\/][^\s"''<>|;`&]+|/[a-z]/[^\s"''<>|;`&]+|//[a-z]/[^\s"''<>|;`&]+|\\\\[^\s"''<>|;`&]+)'
+# Paths QUOTÉS (peuvent contenir des espaces) : "C:\a b\c", '/c/a b/c', '\\srv\share'. Capture l'intérieur.
+$quotedPathRegex = '["'']((?:[A-Za-z]:[\\/]|//?[a-z]/|\\\\)[^"'']*)["'']'
 
 $destructivePatterns = @(
     # Bash
     '\brm\s+', '\brmdir\s+', '\bmv\s+', '\bcp\s+', '\btee\s+',
     '\bmkdir\s+', '\btouch\s+', '\bdd\s+', '\bchmod\s+', '\bchown\s+', '\bln\s+',
     '\bshred\s+', '\btruncate\s+',
+    # Builtins cmd.exe / alias PowerShell natifs de Remove-Item (utilisables sans \bRemove-Item\b) + robocopy purgeant
+    '\bdel\s+', '\berase\s+', '\brd\s+', '(?i)\brobocopy\b.*\s/(mir|purge)\b',
     # Redirection shell vers FICHIER (pas stdout/stderr/dev-null) — accepte path quoté
     '(?<![0-9&])>{1,2}\s+(?!/dev/null|&\d|/dev/stderr|/dev/stdout)(?=["''A-Za-z\./])',
     # PowerShell
@@ -268,9 +274,36 @@ foreach ($rmMatch in [regex]::Matches($cmd, '\brm\b(?<args>[^;&|\r\n]*)')) {
     }
 }
 
+# --- 2d. Cibles de DÉPÔT (cp/mv/redirection) : dernier path de chaque sous-commande
+# de copie/déplacement + cible des redirections. Un exécutable en CIBLE de dépôt ne
+# doit PAS bénéficier de l'exemption « exécutables » de l'étape 3 (sinon on peut
+# déposer un .exe/.ps1 hors zone, ex. dans un dossier Startup).
+$depositTargets = @()
+foreach ($m in [regex]::Matches($cmd, '(?i)\b(cp|mv|copy|xcopy|robocopy|copy-item|move-item)\b(?<args>[^;&|\r\n]*)')) {
+    $argsSeg = $m.Groups['args'].Value
+    $segPaths = @()
+    $argsNoQ = $argsSeg
+    foreach ($pm in [regex]::Matches($argsSeg, $quotedPathRegex)) {
+        $segPaths += @{ v = $pm.Groups[1].Value; i = $pm.Index }
+        $argsNoQ = $argsNoQ.Remove($pm.Index, $pm.Length).Insert($pm.Index, (' ' * $pm.Length))
+    }
+    foreach ($pm in [regex]::Matches($argsNoQ, $pathRegex)) { $segPaths += @{ v = $pm.Value; i = $pm.Index } }
+    if ($segPaths.Count -ge 1) { $depositTargets += ($segPaths | Sort-Object { $_.i } | Select-Object -Last 1).v }
+}
+foreach ($m in [regex]::Matches($cmd, '(?<![0-9&])>{1,2}\s*(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>]+))')) {
+    $t = if ($m.Groups[1].Value) { $m.Groups[1].Value } elseif ($m.Groups[2].Value) { $m.Groups[2].Value } else { $m.Groups[3].Value }
+    $depositTargets += $t
+}
+
 # --- 3. Vérifier chaque path absolu trouvé (quotés + non quotés) --------------
 foreach ($p in $collectedPaths) {
-    if ($p -match '\.(exe|bat|cmd|sh|ps1|py|pl|rb|jar|phar)$') { continue }  # exécutables (read+exec)
+    if ($p -match '\.(exe|bat|cmd|sh|ps1|py|pl|rb|jar|phar)$') {
+        # Exemption exécutables (read+exec) SAUF si ce path est une cible de dépôt.
+        $isDeposit = $false
+        $pNorm = Normalize-Path $p
+        foreach ($t in $depositTargets) { if ((Normalize-Path $t) -eq $pNorm) { $isDeposit = $true; break } }
+        if (-not $isDeposit) { continue }
+    }
     if ($p -match '/dev/(null|stdout|stderr|tty)') { continue }
     if ($p -match '^[a-z]:/+(localhost|[a-z0-9.-]+\.[a-z]{2,})/') { continue }  # fragments d'URL
     if (-not (Is-PathInProject $p)) {

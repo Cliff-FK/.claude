@@ -26,7 +26,7 @@ Before any analysis, resolve the real values. Never assume paths, prefixes, slug
 - **Theme presets / breakpoints**: discover real values via `morph_blocks_get_viewport('mobile'|'tablet')` and the option `morph_blocks_settings`, and (WP 7.1+) `wp_get_block_viewport_sizes()`. Never assume 480/782 or any literal — they are presets the user can override.
 - **Block sources**: classification (`source` per attribute) comes from `WP_Block_Type_Registry`, never from a hardcoded list of block names.
 
-If you need WordPress / Gutenberg API ground truth (block sources, `register_post_meta` REST protection rules, `serialize_precision` behavior, Style Engine store), invoke the **`wp-native`** skill rather than guessing.
+If you need WordPress / Gutenberg API ground truth (block sources, `register_post_meta` REST protection rules, `serialize_precision` behavior, Style Engine store), invoke the **`cliff-stack:wp-native`** skill rather than guessing.
 
 ---
 
@@ -90,9 +90,9 @@ The sig is `pos_` + first 12 hex of `md5(payload)`, where `payload = name . '|' 
 
 ---
 
-## Known live defect in your zone (confirmed empirically by the cartography critic — re-verify before acting)
+## Historical defect in your zone (fixed as of 2026-07 — re-verify before claiming, never assume current state from this doc)
 
-`preSave-builder.js` line ~23: the hardcoded fallback for `META_JS_HTML` is `'_morph_blocks_js_html'` (**with** leading underscore), but PHP `MORPH_BLOCKS_META_JS_HTML` is `'morph_blocks_js_html'` (**no** underscore). If `window.morphBlocksConst` is absent (script handle out of order / localize desync), the meta is written under a `_`-prefixed key that REST refuses to persist AND that the build never reads → **all C1 variants silently broken**. The fix is to align the JS fallback to the no-underscore value. Verify the line is still present before acting (the file moves), then flag it; do not patch prod code without explicit user validation.
+`preSave-builder.js` (~line 23-27): the hardcoded fallback for `META_JS_HTML` was historically `'_morph_blocks_js_html'` (with leading underscore) while PHP `MORPH_BLOCKS_META_JS_HTML` is `'morph_blocks_js_html'` (no underscore) — a `_`-prefixed key that REST refuses to persist and the build never reads. **Invariant to re-verify at runtime**: the JS fallback must equal the un-prefixed PHP value byte-for-byte. Grep BOTH sides (preSave-builder.js fallback AND constants.php) before reporting any divergence; as of 2026-07-10 they match (`'morph_blocks_js_html'`). Do not patch prod code without explicit user validation.
 
 ---
 
@@ -120,8 +120,8 @@ If you cannot fill `direct_signal` AND `refutation_attempt`, you do not have a f
 ## DRY — defer to existing agents/skills, do not duplicate them
 
 - **Full repo audit / cross-zone correctness sweep** → defer to **`morph-blocks-auditor`** (it owns the holistic audit; you only deep-dive the contracts seam).
-- **End-to-end validation that the change actually swaps at the front** (admin→save/cache→front, both directions, REAL UI save via Playwright click — never programmatic) → defer to **`regression-tester`** and the **`wp-save-ui-test`** skill. You prove *parity of the identifier*; they prove *the behavior triggers*. Always validate the DÉCLENCHEMENT axis (a save path never exercised = guaranteed blind spot — e.g. REST vs non-REST, CLI without `wp_set_current_user`).
+- **End-to-end validation that the change actually swaps at the front** (admin→save/cache→front, both directions, REAL UI save via Playwright click — never programmatic) → defer to **`regression-tester`** and the **`cliff-stack:wp-save-ui-test`** skill. You prove *parity of the identifier*; they prove *the behavior triggers*. Always validate the DÉCLENCHEMENT axis (a save path never exercised = guaranteed blind spot — e.g. REST vs non-REST, CLI without `wp_set_current_user`).
 - **Tracing a sig from editor → meta → cache → DOM lookup** through the whole pipeline → defer to **`wp-block-pipeline-tracer`**.
-- **WordPress/Gutenberg API ground truth** (block sources, REST meta protection, Style Engine, `serialize_precision`) → invoke the **`wp-native`** skill instead of reasoning from memory.
+- **WordPress/Gutenberg API ground truth** (block sources, REST meta protection, Style Engine, `serialize_precision`) → invoke the **`cliff-stack:wp-native`** skill instead of reasoning from memory.
 
 You are narrow on purpose. When in doubt whether a change is "yours", ask: does it alter the bytes of a signature, the value of a shared identifier, a breakpoint, or the cache schema version? If yes — own it. If no — route it.

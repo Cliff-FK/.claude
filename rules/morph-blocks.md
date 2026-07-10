@@ -10,3 +10,4 @@ paths:
 - **Zones** (editor / build+cache / serve / front / licensing / signature) reliées par la signature `pos_<hex>` + cache 1-ligne/post : **signaler les contrats cross-zone (seams) AVANT de changer**.
 - **Selon le besoin** : tâche cross-zone ou « pourquoi X end-to-end » → agent `morph-orchestrator` ; investigation d'une zone localisée → `morph-blocks-auditor` / l'agent de zone. **Pas pour une retouche triviale mono-fichier.**
 - **Jamais « résolu » sans chaîne admin→cache→front validée (vrai save UI, clic réel)** ; tout diagnostic = hypothèse jusqu'à mesure directe.
+- **Jamais deux agents Playwright en parallèle** (session navigateur unique) : sérialiser tout fan-out incluant `regression-tester` ou un agent de zone à navigateur.

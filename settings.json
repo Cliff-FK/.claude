@@ -20,27 +20,15 @@
       "Skill(research-arbitrate:*)",
       "Skill(impeccable)",
       "Skill(impeccable:*)",
-      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/scss/generics/**)",
-      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/sources/js/**)",
-      "Read(//c/MAMP/htdocs/wmki/wp-builder-2026/wp-content/themes/themezero/**)",
       "Read(//c/MAMP/htdocs/**)",
+      "Read(//c/tmp/**)",
       "Skill(generator-critic-verifier)",
       "Skill(generator-critic-verifier:*)",
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Skill(claude-api)",
       "Skill(claude-api:*)",
-      "Edit(~/.claude/skills/cliff-stack/**)",
-      "Bash(mv audit-mb-account-360.png audit-mb-login-dark.png audit-mb-modal-cancel-sub.png /c/tmp/audit-design-morphblocks/)",
-      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/page-2026-07-02T18-10-06-767Z.png\" /c/tmp/audit-design-morphblocks/account-factures-360-header-tronque.png)",
-      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/page-2026-07-02T18-12-08-975Z.png\" /c/tmp/audit-design-morphblocks/tarifs-412-burger-hors-ecran.png)",
-      "Read(//c/tmp/audit-design-morphblocks//**)",
-      "Bash(cp \"/c/Users/Cliff Rob/.claude/playwright-output/01-overlay-checkout-fr.png\" /c/tmp/validation-lang-morphblocks/)",
-      "Read(//c/tmp/validation-lang-morphblocks//**)",
-      "Skill(artifact-design)",
-      "Skill(artifact-design:*)",
-      "Bash(cd \"c:/MAMP/htdocs/wmki/wp-builder-2026\" && git diff wp-content/plugins/morph-blocks/readme.txt | head -15 && mv qlprobe-375-cssrouting-on.png qlprobe-375-mobile-right.png \"/c/Users/Cliff Rob/.claude/playwright-output/\" && echo \"--- screenshots déplacés vers playwright-output ---\")",
-      "Bash(mv /c/MAMP/htdocs/wmki/wp-builder-2026/fpgate-375-center-firstpaint.png \"/c/Users/Cliff Rob/.claude/playwright-output/fpgate-375-center-firstpaint.png\" *)"
+      "Edit(~/.claude/skills/cliff-stack/**)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -52,6 +40,7 @@
       "Read(**/*.pem)",
       "Read(**/*.pfx)",
       "Read(**/*.p12)",
+      "Read(**/*.ppk)",
       "Read(**/.aws/credentials)",
       "Read(**/.git-credentials)",
       "Read(**/.tmp_pass)",
@@ -75,13 +64,14 @@
       "PowerShell(Set-ExecutionPolicy Unrestricted*)"
     ],
     "ask": [
-      "Workflow"
+      "Workflow",
+      "Edit(~/.claude/skills/cliff-stack/hooks/**)",
+      "Write(~/.claude/skills/cliff-stack/hooks/**)",
+      "Edit(~/.claude/settings.json)",
+      "Write(~/.claude/settings.json)"
     ],
     "additionalDirectories": [
-      "~/.claude",
-      "c:\\Users\\Cliff Rob\\.claude",
-      "C:\\Users\\Cliff Rob\\.claude\\playwright-output",
-      "C:\\Users\\Cliff Rob\\.claude\\playwright-output\\"
+      "~/.claude"
     ]
   },
   "model": "claude-fable-5[1m]",
