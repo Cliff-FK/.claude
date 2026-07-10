@@ -84,7 +84,7 @@
       "C:\\Users\\Cliff Rob\\.claude\\playwright-output\\"
     ]
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5[1m]",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {},
   "language": "french",
