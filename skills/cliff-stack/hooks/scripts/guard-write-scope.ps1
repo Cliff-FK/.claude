@@ -305,7 +305,7 @@ foreach ($p in $collectedPaths) {
         if (-not $isDeposit) { continue }
     }
     if ($p -match '/dev/(null|stdout|stderr|tty)') { continue }
-    if ($p -match '^[a-z]:/+(localhost|[a-z0-9.-]+\.[a-z]{2,})/') { continue }  # fragments d'URL
+    if ($p -match '^[a-z]:/+(localhost|[a-z0-9.-]+\.[a-z]{2,})(:\d+)?(/|$)') { continue }  # fragments d'URL (host[:port] avec ou sans chemin)
     if (-not (Is-PathInProject $p)) {
         Reject "BLOQUÉ (écriture/destruction hors projet : '$p'). Zones autorisées : $($allowedRoots -join ', ')"
     }
