@@ -43,6 +43,8 @@ $allowedRoots += 'c:\tmp'
 # Dossier de config Claude (déjà dans additionalDirectories) : skills, hooks,
 # memory, sorties MCP (ex. playwright-output). Écriture shell autorisée ici.
 if ($env:USERPROFILE) { $allowedRoots += (Join-Path $env:USERPROFILE '.claude').ToLower() }
+# Scratchpad de session Claude Code (zone temporaire officielle du harnais).
+if ($env:LOCALAPPDATA) { $allowedRoots += (Join-Path $env:LOCALAPPDATA 'Temp\claude').ToLower() }
 # Zones ADDITIONNELLES optionnelles (~/.claude/write-scope-extra-roots.txt : 1 chemin par ligne,
 # lignes # = commentaires). Étend le périmètre SANS modifier ce hook — pour les répertoires de
 # travail légitimes hors racine web explicitement demandés par l'utilisateur (ex. un projet sur
