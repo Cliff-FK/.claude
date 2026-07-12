@@ -11,6 +11,7 @@
 # 2) Whitelister les zones approuvées (répertoires : ré-inclure le dossier puis son contenu)
 !/.gitignore
 !/CLAUDE.md
+!/README.md
 
 !/rules/
 !/rules/**
