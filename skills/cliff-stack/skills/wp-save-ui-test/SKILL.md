@@ -1,6 +1,6 @@
 ---
 name: wp-save-ui-test
-description: Procédure pour déclencher un VRAI save humain dans l'éditeur WordPress/Gutenberg via Playwright (clic réel sur Enregistrer, jamais programmatique), afin de tester un comportement qui ne se déclenche qu'au save UI (cache plugin, hooks rest_after_insert, filtres preSavePost, validation REST). À utiliser quand : on debug/teste un plugin ou thème WordPress dont le comportement dépend d'une sauvegarde réelle de post depuis l'admin, et qu'un save programmatique (wp post update / savePost) ne reproduit pas le cas. Ne s'applique qu'aux projets WordPress.
+description: "Procédure pour déclencher un VRAI save humain dans l'éditeur WordPress/Gutenberg via Playwright (clic réel sur Enregistrer, jamais programmatique), afin de tester un comportement qui ne se déclenche qu'au save UI (cache plugin, hooks rest_after_insert, filtres preSavePost, validation REST). À utiliser quand : on debug/teste un plugin ou thème WordPress dont le comportement dépend d'une sauvegarde réelle de post depuis l'admin, et qu'un save programmatique (wp post update / savePost) ne reproduit pas le cas. Ne s'applique qu'aux projets WordPress."
 ---
 
 # Tester un save UI humain dans WordPress (Gutenberg)

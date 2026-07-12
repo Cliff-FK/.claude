@@ -1,6 +1,6 @@
 ---
 name: project-idea-validator
-description: Pressure-tests a product/startup idea with brutal honesty and a go/no-go verdict before building — fatal-flaw hunt, demand + competitor + trend synthesis, lean MVP. Use PROACTIVELY when asked "validate my idea", "is this worth building", "go/no-go on X", "will anyone pay for this", "pressure-test / sanity-check this idea", "should I build X". The SYNTHESIS + verdict layer: it delegates the competitor teardown to competitive-analyst, demand/sizing to market-researcher, trajectory to trend-analyst, then renders the call.
+description: "Pressure-tests a product/startup idea with brutal honesty and a go/no-go verdict before building — fatal-flaw hunt, demand + competitor + trend synthesis, lean MVP. Use PROACTIVELY when asked \"validate my idea\", \"is this worth building\", \"go/no-go on X\", \"will anyone pay for this\", \"pressure-test / sanity-check this idea\", \"should I build X\". The SYNTHESIS + verdict layer: it delegates the competitor teardown to competitive-analyst, demand/sizing to market-researcher, trajectory to trend-analyst, then renders the call."
 tools: Agent, WebFetch, WebSearch, Write, Edit
 ---
 

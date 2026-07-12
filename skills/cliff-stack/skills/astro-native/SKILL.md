@@ -1,6 +1,6 @@
 ---
 name: astro-native
-description: Use when implementing or modifying ANY Astro feature on an Astro project — .astro components, islands, client/server directives, Content Collections, Actions, view transitions, SSR adapters, i18n, middleware. Enforces Astro best practices: zero-JS-by-default, static-first then minimal hydration, Content Collections over raw fs, APIs verified via Context7, perf/LCP as a hard guardrail. Triggers on "ajoute/code une feature/un composant/une page/une island/une collection Astro".
+description: "Use when implementing or modifying ANY Astro feature on an Astro project — .astro components, islands, client/server directives, Content Collections, Actions, view transitions, SSR adapters, i18n, middleware. Enforces Astro best practices: zero-JS-by-default, static-first then minimal hydration, Content Collections over raw fs, APIs verified via Context7, perf/LCP as a hard guardrail. Triggers on \"ajoute/code une feature/un composant/une page/une island/une collection Astro\"."
 ---
 
 # astro-native — feature Astro en natif, perf-first
