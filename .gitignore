@@ -49,6 +49,9 @@
 /plugins/blocklist.json
 # et sauf les clones de marketplaces : état runtime (repos git imbriqués), pas de la config
 /plugins/marketplaces/
+# et sauf les caches runtime : régénérés à l'usage, pur bruit de diff
+/plugins/plugin-catalog-cache.json
+/plugins/.last_inuse_sweep
 
 # 3) Garde-fous : ré-exclure tout secret même s'il se glisse dans une zone whitelistée
 **/*.key
