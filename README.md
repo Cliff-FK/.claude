@@ -76,6 +76,7 @@ barrière de hooks `PreToolUse` câblés dans le plugin :
 | `guard-write-scope` | Bloque toute écriture ou destruction hors des zones autorisées (projet courant, dossier temporaire, `~/.claude`, plus les racines listées dans un fichier local) |
 | `guard-secrets-read` | Bloque la lecture via shell des fichiers de secrets (`.env`, credentials, clés) |
 | `guard-git-destructive` | Intercepte les commandes git destructrices (reset --hard, push --force, clean) pour confirmation |
+| `guard-workflow-budget` | Bloque tout lancement de `Workflow` sans lecture préalable du script et déclaration `// agents-max: N` (fan-out mécanique calculé) ; plafond 12 agents, au-delà validation explicite de l'user requise (`// agents-max-user-ok`) |
 
 En complément : `permissions.deny` dans `settings.json` en filet, analyse PHPCS
 WordPress automatique après chaque écriture PHP (`PostToolUse`), rappel des règles
