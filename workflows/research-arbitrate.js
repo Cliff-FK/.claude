@@ -82,11 +82,12 @@ const FINDINGS = {
 }
 const CROSS = {
   type: 'object',
-  required: ['agreements', 'contradictions', 'keyClaimsToChallenge'],
+  required: ['agreements', 'contradictions', 'keyClaimsToChallenge', 'solidClaims'],
   properties: {
     agreements: { type: 'array', items: { type: 'string' } },
     contradictions: { type: 'array', items: { type: 'object', properties: { topic: { type: 'string' }, positions: { type: 'string' } } } },
-    keyClaimsToChallenge: { type: 'array', items: { type: 'string' }, description: 'les affirmations pivot dont dépend la réponse — à réfuter en priorité' },
+    keyClaimsToChallenge: { type: 'array', items: { type: 'string' }, description: 'les affirmations pivot dont dépend la réponse ET qui méritent réfutation : contestées entre voies, OU mono-source, OU confiance ≤ medium. Une claim pivot corroborée par 2+ voies en high ne va PAS ici — elle va dans solidClaims.' },
+    solidClaims: { type: 'array', items: { type: 'string' }, description: 'affirmations pivot corroborées par 2+ voies indépendantes avec confiance high — considérées solides, dispensées de challenge (elles entrent à l\'arbitrage marquées comme telles)' },
   },
 }
 const CHALLENGE = {
@@ -148,11 +149,14 @@ phase('Sweep')
 //    ci-dessous). Pas d'usage MCP implicite dans les autres voies.
 //  - AGENTS : ce script orchestre librement autant d'agents que nécessaire, bornés par les
 //    caps (N_CHAL≤4, ≤8 affirmations challengées) + caps runtime (16 concurrents).
+// Économie d'input partagée par les voies web : le Sweep est le poste input dominant
+// du run — on borne les fetches sans borner la recherche (chercher large, charger ciblé).
+const FETCH_ECONOMY = `RÈGLE D'ÉCONOMIE : cherche large mais ne CHARGE que 2-3 pages ciblées maximum ; extrais les claims au fil de l'eau, ne charge jamais une page entière "au cas où".`
 const VOIE_PROMPT = {
   context7: `Voie CONTEXT7 (quota partagé — économe) : interroge la doc à jour via Context7. RÈGLES D'ÉCONOMIE : (a) si tu connais déjà l'ID de lib (ex. /withastro/docs, /wordpress/gutenberg, /freemius/freemius-js), appelle query-docs DIRECTEMENT — saute resolve-library-id ; ne l'utilise que pour une lib inconnue ; (b) regroupe TOUS tes besoins doc en UN SEUL query-docs à 'topic' large, jamais une rafale de requêtes étroites. Extrais des affirmations sourcées (ID Context7). Si le sujet n'a pas de lib Context7, dis-le dans notFound.`,
-  officialRepos: `Voie DÉPÔTS/GUIDES OFFICIELS : cherche les repos GitHub officiels / guides de référence de l'éditeur du sujet (et un éventuel skill-creator, llms.txt, .well-known). Affirmations sourcées (URLs réelles). Ne conclus "n'existe pas" qu'APRÈS recherche.`,
-  officialDocs: `Voie DOC OFFICIELLE DU SUJET : la documentation officielle (site éditeur, spec). Affirmations sourcées (URLs). Chiffres/limites/signatures exacts si pertinents.`,
-  community: `Voie COMMUNAUTÉ : sources communautaires sérieuses (Stack Overflow, blogs techniques reconnus, issues GitHub, discussions). Affirmations sourcées + signale leur fiabilité (officiel-adjacent vs opinion isolée).`,
+  officialRepos: `Voie DÉPÔTS/GUIDES OFFICIELS : cherche les repos GitHub officiels / guides de référence de l'éditeur du sujet (et un éventuel skill-creator, llms.txt, .well-known). Affirmations sourcées (URLs réelles). Ne conclus "n'existe pas" qu'APRÈS recherche. ${FETCH_ECONOMY}`,
+  officialDocs: `Voie DOC OFFICIELLE DU SUJET : la documentation officielle (site éditeur, spec). Affirmations sourcées (URLs). Chiffres/limites/signatures exacts si pertinents. ${FETCH_ECONOMY}`,
+  community: `Voie COMMUNAUTÉ : sources communautaires sérieuses (Stack Overflow, blogs techniques reconnus, issues GitHub, discussions). Affirmations sourcées + signale leur fiabilité (officiel-adjacent vs opinion isolée). ${FETCH_ECONOMY}`,
   project: `Voie PROJET (vérité terrain) : inspecte le CODE et le contexte du projet courant (Grep/Glob/Read, package.json, versions réellement installées dans node_modules, conventions). Affirmations sourcées en fichier:ligne. C'est la réalité du terrain, prioritaire sur les généralités quand la question porte sur "ici".
 Indices projet : ${projectHint}`,
 }
@@ -161,11 +165,18 @@ Indices projet : ${projectHint}`,
 // Les autres voies restent en agent générique (recherche web/MCP ouverte).
 // Fallback sûr : si 'Explore' n'existe pas, le runtime retombe sur le générique.
 const AGENT_TYPE = { project: 'Explore' }
+// Routage MODÈLE par nature de tâche : les 4 voies de COLLECTE web tournent sur Sonnet
+// (récupération/extraction bien spécifiée = sa zone ; ~40-60 % moins cher par token),
+// en GARDANT effort high — on ne cumule jamais les deux downgrades (modèle ET effort).
+// La voie 'project' (vérité terrain, prioritaire à l'arbitrage) et toutes les phases
+// d'analyse (Croisement/Challenge/Arbitrage) restent sur le modèle de session.
+// Chaque sous-agent a un contexte isolé → aucun coût de cache lié au changement de modèle.
+const VOIE_MODEL = { context7: 'sonnet', officialRepos: 'sonnet', officialDocs: 'sonnet', community: 'sonnet' }
 const findings = (await parallel(
   voies.map((v) => () =>
     agent(
       `${VOIE_PROMPT[v]}\n\nQuestion globale : ${question}\nSous-questions : ${(scope?.subQuestions ?? []).join(' | ')}${hints[v] ? `\nIndice de recherche pour cette voie : ${hints[v]}` : ''}\nRends des claims atomiques, chacune avec sa source TRAÇABLE et un niveau de confiance. Si cette voie ne donne rien, remplis notFound (ne jamais conclure "rien" sans avoir cherché). Jamais d'affirmation "de mémoire" sans source.`,
-      { phase: 'Sweep', label: `sweep:${v}`, schema: FINDINGS, effort: 'high', ...(AGENT_TYPE[v] ? { agentType: AGENT_TYPE[v] } : {}) }
+      { phase: 'Sweep', label: `sweep:${v}`, schema: FINDINGS, effort: 'high', ...(AGENT_TYPE[v] ? { agentType: AGENT_TYPE[v] } : {}), ...(VOIE_MODEL[v] ? { model: VOIE_MODEL[v] } : {}) }
     )
   )
 )).filter(Boolean)
@@ -175,24 +186,35 @@ log(`Sweep: ${allClaims.length} affirmations sur ${findings.length} voies`)
 // ── Phase Croisement (barrière nécessaire : besoin de TOUTES les voies) ───────
 phase('Croisement')
 const cross = await agent(
-  `Croise ces affirmations issues de voies différentes. Déduplique, liste les ACCORDS (plusieurs voies concordent), les CONTRADICTIONS (voies en désaccord — précise les positions), et surtout les AFFIRMATIONS PIVOT dont dépend la réponse finale (à challenger en priorité).
+  `Croise ces affirmations issues de voies différentes. Déduplique, liste les ACCORDS (plusieurs voies concordent), les CONTRADICTIONS (voies en désaccord — précise les positions), puis TRIE les affirmations pivot dont dépend la réponse finale :
+- keyClaimsToChallenge : celles qui méritent réfutation (contestées entre voies, OU mono-source, OU confiance ≤ medium) ;
+- solidClaims : celles corroborées par 2+ voies indépendantes en high — solides, on ne dépense pas de challenge dessus.
 Affirmations (voie | claim | source | confiance) :
 ${allClaims.map((c) => `- [${c.voie}/${c.confidence}] ${c.claim}  (src: ${c.source})`).join('\n')}`,
   { phase: 'Croisement', schema: CROSS, effort: 'high' }
 )
 const toChallenge = (cross?.keyClaimsToChallenge?.length ? cross.keyClaimsToChallenge : allClaims.filter((c) => c.confidence !== 'high').map((c) => c.claim)).slice(0, 8)
-log(`Croisement: ${cross?.agreements?.length ?? 0} accords, ${cross?.contradictions?.length ?? 0} contradictions, ${toChallenge.length} affirmations à challenger`)
+log(`Croisement: ${cross?.agreements?.length ?? 0} accords, ${cross?.contradictions?.length ?? 0} contradictions, ${toChallenge.length} à challenger, ${cross?.solidClaims?.length ?? 0} solides (dispensées)`)
 
-// ── Phase Challenge : N agents adversariaux par affirmation pivot ─────────────
+// ── Phase Challenge : N challengers à LENTILLES DIFFÉRENCIÉES par claim pivot ──
+// Pas N copies du même prompt : la diversité de perspectives attrape les modes
+// d'échec que la redondance rate (même coût, couverture supérieure). N_CHAL
+// sélectionne les N premières lentilles.
 phase('Challenge')
+const LENSES = [
+  `lentille CONTRE-SOURCE OFFICIELLE : cherche la doc, spec ou changelog officiel qui contredit ou nuance l'affirmation (API réelle, limites chiffrées, version exacte)`,
+  `lentille VÉRITÉ TERRAIN PROJET : confronte l'affirmation au code et aux versions réellement installées du projet courant (Grep/Read, package.json, node_modules)`,
+  `lentille CONTRE-EXEMPLE COMMUNAUTAIRE : cherche issues GitHub, bug reports ou retours sérieux montrant qu'elle ne tient pas en pratique`,
+  `lentille OBSOLESCENCE : vérifie si l'affirmation était vraie mais ne l'est plus (breaking change, dépréciation, changement de version)`,
+]
 const challenged = (await parallel(
   toChallenge.flatMap((claim) =>
     Array.from({ length: N_CHAL }, (_, k) => () =>
       agent(
-        `Tu es un challenger ADVERSARIAL (#${k + 1}). Tente de RÉFUTER ou nuancer sérieusement cette affirmation, en cherchant une contre-source réelle, un contre-exemple, ou la vérité terrain du projet/version installée. survives=false si tu y parviens. Ne ratifie pas par confort ; si elle tient vraiment, dis pourquoi avec preuve.
+        `Tu es un challenger ADVERSARIAL — ${LENSES[k % LENSES.length]}. Tente de RÉFUTER ou nuancer sérieusement cette affirmation par TA lentille. survives=false si tu y parviens. Ne ratifie pas par confort ; si elle tient vraiment sous ta lentille, dis pourquoi avec preuve.
 Affirmation : "${claim}"
 Question globale : ${question}`,
-        { phase: 'Challenge', label: `challenge#${k + 1}`, schema: CHALLENGE, effort: 'high' }
+        { phase: 'Challenge', label: `challenge:lens${(k % LENSES.length) + 1}`, schema: CHALLENGE, effort: 'high' }
       )
     )
   )
@@ -216,6 +238,7 @@ Question : ${question}
 
 ACCORDS entre voies : ${(cross?.agreements ?? []).join(' | ') || '—'}
 CONTRADICTIONS : ${(cross?.contradictions ?? []).map((c) => `${c.topic}: ${c.positions}`).join(' | ') || '—'}
+CLAIMS SOLIDES (corroborées par 2+ voies en high — dispensées de challenge, à traiter comme fiables) : ${(cross?.solidClaims ?? []).join(' | ') || '—'}
 VERDICTS DE CHALLENGE (affirmation → fragile ?) :
 ${claimVerdicts.map((v) => `- "${v.claim}" → ${v.fragile ? 'FRAGILE' : 'tient'} (${v.refuted}/${v.total} réfutent)`).join('\n')}
 Toutes les affirmations sourcées :
@@ -230,6 +253,7 @@ return {
   voiesUtilisees: voies,
   nbClaims: allClaims.length,
   contradictions: cross?.contradictions ?? [],
+  solidClaims: cross?.solidClaims ?? [],
   fragileClaims: claimVerdicts.filter((v) => v.fragile).map((v) => v.claim),
   verdict,
   note: 'Recherche en lecture seule — aucun fichier modifié. Sources tracées dans verdict.keySources et dans les claims.',
