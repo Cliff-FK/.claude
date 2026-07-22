@@ -5,7 +5,7 @@ Toujours répondre en français (orthographe complète, accents respectés).
 - **Contenu produit (textes UI, copy, descriptions, modales) : éviter les marqueurs « IA »** : pas de tirets cadratin/demi-cadratin (« — », « – ») en ponctuation (virgule/point/deux-points/parenthèses à la place), pas d'émojis ni d'icônes décoratives, pas de gras emphatique gratuit. Ponctuation simple et phrases qui se lisent. Trait d'union des mots composés OK.
 
 ## Sécurité Claude Code (NE PAS désactiver)
-Poste en **liberté shell maximale** (allow global sur shell/web/fichiers ; MCP : seuls `playwright` et `context7` sont allow — tout autre serveur promptera, c'est normal) **+ barrière par 3 hooks `PreToolUse`** (guard-write-scope, guard-secrets-read, guard-git-destructive) **câblés dans le plugin cliff-stack** (`~/.claude/skills/cliff-stack/hooks/hooks.json`) + `permissions.deny` en filet. Détail : `~/.claude/SECURITY-SETUP.md`.
+Poste en **liberté shell maximale** (allow global sur shell/web/fichiers ; MCP : seuls `playwright` et `context7` sont allow — tout autre serveur promptera, c'est normal) **+ barrière par 4 hooks `PreToolUse`** (guard-write-scope, guard-secrets-read, guard-git-destructive, guard-root-hygiene) **câblés dans le plugin cliff-stack** (`~/.claude/skills/cliff-stack/hooks/hooks.json`) + `permissions.deny` en filet. Détail : `~/.claude/SECURITY-SETUP.md`.
 - **Ne jamais réintroduire de règles `allow` par projet** (inutile, génère des prompts).
 - Un hook bloque à tort → **corriger le script** (`~/.claude/skills/cliff-stack/hooks/scripts/`), **pas le câblage** ; écrire hors projet → lancer ce dossier comme projet (ne pas contourner).
 

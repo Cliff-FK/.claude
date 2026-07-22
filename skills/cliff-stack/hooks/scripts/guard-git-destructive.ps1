@@ -28,6 +28,16 @@ try {
     $cmd = [string]$payload.tool_input.command
     if (-not $cmd) { exit 0 }
 
+    # Dérogation one-shot : l'autorisation explicite a DÉJÀ été obtenue via AskUserQuestion.
+    # Claude crée ce fichier sentinelle APRÈS l'accord de l'user, jamais avant ni sans demande.
+    # Consommé (supprimé) dès ce passage ; validité 10 min pour éviter une dérogation orpheline.
+    $sentinel = Join-Path $env:USERPROFILE '.claude\git-destructive-authorized'
+    if (Test-Path $sentinel) {
+        $sentinelAge = (Get-Date) - (Get-Item $sentinel).LastWriteTime
+        Remove-Item $sentinel -Force
+        if ($sentinelAge.TotalMinutes -lt 10) { exit 0 }
+    }
+
     # Retire les portions CITÉES (messages de commit -m "...", heredocs) AVANT analyse :
     # sinon un message qui mentionne "reset --hard" serait bloqué à tort (faux positif).
     $stripped = $cmd
@@ -90,6 +100,7 @@ try {
         # exit 2 = blocage PreToolUse ; le texte stderr est renvoyé à Claude comme raison.
         [Console]::Error.WriteLine("BLOQUE par guard-git-destructive : $blockedReason.")
         [Console]::Error.WriteLine("Operation git DESTRUCTIVE pour du travail non commite. Tu DOIS demander une autorisation EXPLICITE a l'utilisateur (via AskUserQuestion) AVANT de lancer un revert git. Ne contourne pas ce garde.")
+        [Console]::Error.WriteLine("Si (et seulement si) l'utilisateur a DEJA repondu OUI via AskUserQuestion dans ce meme contexte : creer le fichier sentinelle ~\.claude\git-destructive-authorized (one-shot, valide 10 min) puis relancer la commande.")
         exit 2
     }
 } catch {
