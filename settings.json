@@ -4,6 +4,7 @@
     "IMPECCABLE_NO_UPDATE_CHECK": "1"
   },
   "permissions": {
+    "defaultMode": "auto",
     "allow": [
       "Bash(*)",
       "PowerShell(*)",
@@ -27,8 +28,7 @@
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Skill(claude-api)",
-      "Skill(claude-api:*)",
-      "Edit(~/.claude/skills/cliff-stack/**)"
+      "Skill(claude-api:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -72,6 +72,17 @@
     ],
     "additionalDirectories": [
       "~/.claude"
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Organization: développeur indépendant solo. Primary use: développement local, projets variés",
+      "Network posture: poste de dev Windows isolé, serveur web et base de données locaux. Aucune infrastructure de production n'est accessible depuis ce poste",
+      "Trusted internal domains: localhost, 127.0.0.1, les vhosts servis par le serveur web local depuis C:\\MAMP\\htdocs",
+      "Key internal services: serveur MySQL local (bases de dev jetables, recréables par import SQL) et binaires CLI de la stack locale sous C:\\MAMP\\bin",
+      "Cloud provider(s): aucun",
+      "Source control: dépôts git locaux, sans remote pour la plupart"
     ]
   },
   "model": "opus[1m]",
