@@ -36,14 +36,19 @@ complet développé directement dans le dépôt (pas de dépôt séparé, pas de
 ├── settings.json              # Réglages du harness (permissions, hooks du plugin)
 ├── README.md                  # Ce fichier
 ├── rules/                     # Règles par sujet, chargées automatiquement selon le contexte
-│   ├── morph-blocks.md
+│   │                          #   (frontmatter `paths:` = fichiers qui les déclenchent)
+│   ├── architecture-extension.md  # Points d'extension : nommage, moment de lecture, dépréciation
+│   ├── code-style.md              # 2 occurrences, commentaires, destroy, build des assets
+│   ├── css-scss.md                # Invariants CSS (baseline du projet, zéro déclaration morte)
 │   ├── wordpress-php.md
+│   ├── morph-blocks.md
 │   └── astro.md
 ├── workflows/                 # Scripts d'orchestration multi-agents réutilisables
 │   ├── generator-critic-verifier.js
 │   └── research-arbitrate.js
 ├── scripts/
-│   └── setup-mcp.ps1          # Installation des serveurs MCP sur un poste neuf
+│   ├── setup-mcp.ps1          # Installation des serveurs MCP sur un poste neuf
+│   └── wp-playwright-storage-state.php  # Cookies WP → storage-state partagé (Playwright --isolated)
 ├── plugins/                   # Index des plugins installés (catalogue, pas de code)
 └── skills/
     ├── developing-godot-games/  # Skill autonome hors plugin
