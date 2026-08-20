@@ -229,12 +229,21 @@ function orderRun(run) {
 
 /* ---------------------------------------------------------------------runs */
 
+// Une declaration n'est triable que si elle occupe sa ligne a elle seule :
+// une regle ecrite sur une ligne unique n'est jamais reordonnee, seulement laissee telle quelle.
+function isAlone(it, src) {
+  if (!/^[ \t]*$/.test(src.slice(it.lineStart, it.start))) return false;
+  const end = it.trailingCommentEnd ?? it.end;
+  if (end > it.lineEnd) return false;
+  return /^[ \t]*$/.test(src.slice(end, it.lineEnd));
+}
+
 function runsOf(node, src) {
   const runs = [];
   let cur = [];
   const flush = () => { if (cur.length > 1) runs.push(cur); cur = []; };
   for (const it of node.items) {
-    if (it.kind !== 'decl' || it.multiline) { flush(); continue; }
+    if (it.kind !== 'decl' || it.multiline || !isAlone(it, src)) { flush(); continue; }
     if (cur.length) {
       const prev = cur[cur.length - 1];
       const between = src.slice(prev.lineEnd, it.lineStart);
@@ -384,10 +393,12 @@ function runFiles(mode, paths) {
       for (const node of parse(src)) {
         for (const run of runsOf(node, src)) {
           const order = orderRun(run);
+          const pos = new Array(order.length);
+          order.forEach((v, k) => { pos[v] = k; });
           for (let a = 0; a < run.length; a++) {
             for (let b = a + 1; b < run.length; b++) {
               if (!collides(run[a].prop, run[b].prop)) continue;
-              if (order.indexOf(a) > order.indexOf(b)) problems.push(`collision inversee ${run[a].prop}/${run[b].prop}`);
+              if (pos[a] > pos[b]) problems.push(`collision inversee ${run[a].prop}/${run[b].prop}`);
             }
           }
         }
