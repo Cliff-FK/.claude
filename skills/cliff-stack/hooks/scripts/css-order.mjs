@@ -27,9 +27,13 @@
  * shorthand/longhand) conservent leur ordre relatif d'origine. Le tri ne permute
  * que des declarations independantes (tri topologique sur l'ordre cible).
  *
+ * COMMENTAIRES : un commentaire sur sa propre ligne documente la declaration qui le
+ * suit, lui est rattache et voyage AVEC elle au tri. Un commentaire en fin de ligne
+ * suit sa declaration et ne compte pas dans la longueur. Les blocs descripteurs
+ * (@property, @font-face, @page, @counter-style) ne sont jamais tries.
+ *
  * Ce qui coupe une suite triable : bloc imbrique, at-rule, $var SCSS, custom
- * property, declaration multi-lignes, ligne vide, commentaire sur sa propre ligne.
- * Un commentaire court en fin de ligne est tolere et suit sa declaration.
+ * property, declaration multi-lignes, ligne vide, commentaire non suivi d'une declaration.
  *
  * MODES
  *   --hook            payload hook Claude Code sur stdin, rapport stderr + exit 2
@@ -78,7 +82,7 @@ function parse(src) {
     const gap = src.slice(itemStart, start);
     const trailing = /^[ \t]*$/.test(gap) && prev && !src.slice(prev.end, start).includes('\n');
     if (trailing) prev.trailingCommentEnd = end;
-    else node.items.push({ kind: 'comment', start, end });
+    else node.items.push({ kind: 'comment', start, end, lineStart: lineStartOf(start), lineEnd: lineEndOf(end - 1) });
     itemStart = end;
   };
 
@@ -121,7 +125,11 @@ function parse(src) {
     if (c === ';') { pushStatement(itemStart, i + 1); itemStart = i + 1; i++; continue; }
     if (c === '{') {
       const prelude = src.slice(itemStart, i).trim().replace(/\s+/g, ' ');
-      const node = { kind: 'rule', prelude, items: [], bodyStart: i + 1, start: itemStart, end: -1 };
+      // Descripteurs : leurs « declarations » n'en sont pas (pas de cascade, ordre de lecture propre).
+      const descriptor = /^@(property|font-face|page|counter-style|font-palette-values|viewport)\b/i.test(prelude);
+      const rawPrelude = src.slice(itemStart, i);
+      const preludeStart = itemStart + Math.max(0, rawPrelude.search(/\S/));
+      const node = { kind: 'rule', prelude, descriptor, items: [], bodyStart: i + 1, start: preludeStart, end: -1 };
       top().items.push(node);
       stack.push(node);
       blocks.push(node);
@@ -167,7 +175,13 @@ const SHORTHAND_LINKS = [
   ['background', ['background-color', 'background-image', 'background-position', 'background-size', 'background-repeat']],
 ];
 
-function collides(a, b) {
+// Un prefixe vendeur designe la meme propriete que sa forme standard : ils ne se
+// separent ni ne s'inversent jamais (le prefixe doit rester avant le standard).
+const unprefix = (p) => p.replace(/^-(webkit|moz|ms|o)-/, '');
+
+function collides(rawA, rawB) {
+  const a = unprefix(rawA);
+  const b = unprefix(rawB);
   if (a === b) return true;
   if (a === 'all' || b === 'all') return true;
   if (a.startsWith(b + '-') || b.startsWith(a + '-')) return true;
@@ -199,32 +213,29 @@ function idealOrder(items) {
 
 function orderRun(run) {
   const items = run.map((it, idx) => ({ ...it, idx, rank: rankOf(it.value) }));
-  const target = idealOrder(items);
-  const priority = new Array(items.length);
-  target.forEach((it, pos) => { priority[it.idx] = pos; });
-
   const n = items.length;
-  const adj = Array.from({ length: n }, () => []);
-  const indeg = new Array(n).fill(0);
+  const priority = new Array(n);
+  idealOrder(items).forEach((it, pos) => { priority[it.idx] = pos; });
+
+  // Groupe insecable : les declarations qui se recouvrent se lisent ensemble. Elles restent
+  // collees, dans leur ordre d'origine, et le groupe se place a la meilleure position de ses membres.
+  const parent = items.map((_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
   for (let a = 0; a < n; a++) {
     for (let b = a + 1; b < n; b++) {
-      if (collides(items[a].prop, items[b].prop)) { adj[a].push(b); indeg[b]++; }
+      if (collides(items[a].prop, items[b].prop)) parent[find(a)] = find(b);
     }
   }
-  const used = new Array(n).fill(false);
-  const out = [];
-  for (let k = 0; k < n; k++) {
-    let best = -1;
-    for (let i = 0; i < n; i++) {
-      if (used[i] || indeg[i] !== 0) continue;
-      if (best === -1 || priority[i] < priority[best]) best = i;
-    }
-    if (best === -1) return items.map((_, i) => i);
-    used[best] = true;
-    out.push(best);
-    for (const j of adj[best]) indeg[j]--;
+  const groups = new Map();
+  for (let i = 0; i < n; i++) {
+    const root = find(i);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root).push(i);
   }
-  return out;
+  return [...groups.values()]
+    .map((g) => ({ g, key: Math.min(...g.map((i) => priority[i])) }))
+    .sort((x, y) => x.key - y.key)
+    .flatMap((x) => x.g);
 }
 
 /* ---------------------------------------------------------------------runs */
@@ -238,21 +249,94 @@ function isAlone(it, src) {
   return /^[ \t]*$/.test(src.slice(end, it.lineEnd));
 }
 
+// Un commentaire sur sa propre ligne documente la declaration qui le suit : il lui est rattache
+// et voyage avec elle au tri, sinon il finirait par commenter une autre declaration.
+function attachComments(node) {
+  const out = [];
+  let pending = [];
+  const flushPending = () => { for (const c of pending) out.push(c); pending = []; };
+  for (const it of node.items) {
+    if (it.kind === 'comment') { pending.push(it); continue; }
+    if (it.kind === 'decl') {
+      out.push(pending.length ? { ...it, blockStart: pending[0].lineStart } : { ...it, blockStart: it.lineStart });
+      pending = [];
+      continue;
+    }
+    flushPending();
+    out.push(it);
+  }
+  flushPending();
+  return out;
+}
+
 function runsOf(node, src) {
   const runs = [];
   let cur = [];
   const flush = () => { if (cur.length > 1) runs.push(cur); cur = []; };
-  for (const it of node.items) {
+  for (const it of attachComments(node)) {
     if (it.kind !== 'decl' || it.multiline || !isAlone(it, src)) { flush(); continue; }
     if (cur.length) {
       const prev = cur[cur.length - 1];
-      const between = src.slice(prev.lineEnd, it.lineStart);
+      const between = src.slice(prev.lineEnd, it.blockStart);
       if ((between.match(/\n/g) || []).length > 1) flush();
     }
     cur.push(it);
   }
   flush();
   return runs;
+}
+
+/* ---------------------------------------------------------------- conventions */
+
+// Ecarts objectifs a la convention, signales sans jamais etre reecrits : ils demandent
+// un arbitrage (aplatir, condenser) que seul l'auteur peut rendre.
+function warningsOf(node, src) {
+  const out = [];
+  const at = (pos, note) => out.push({
+    line: src.slice(0, pos).split('\n').length,
+    selector: node.prelude || '(racine)',
+    note,
+    from: pos,
+    to: pos + 1,
+  });
+
+  // Nesting aplatissable : `&…` sous un parent qui tient sur une ligne, sans repetition evitee.
+  for (const it of node.items) {
+    if (it.kind !== 'rule' || it.descriptor) continue;
+    if (!it.prelude.startsWith('&') || it.prelude.includes(',')) continue;
+    if (node.prelude.includes(',') || node.prelude.length > 40) continue;
+    at(it.start, `nesting aplatissable : ecrire « ${node.prelude}${it.prelude.slice(1)} » a plat`);
+  }
+
+  // Ligne vide entre deux declarations : elle coupe le bloc et soustrait les voisines au tri.
+  const decls = node.items.filter((it) => it.kind === 'decl');
+  for (let i = 1; i < decls.length; i++) {
+    const gap = src.slice(decls[i - 1].lineEnd, decls[i].lineStart);
+    if ((gap.match(/\n/g) || []).length > 1) at(decls[i].lineStart, 'ligne vide au milieu des declarations');
+  }
+
+  // Commentaire au-dela de 3 lignes (cf. code-style.md).
+  let runLen = 0;
+  let runStart = 0;
+  let runEnd = 0;
+  const closeRun = () => {
+    if (runLen > 3) at(runStart, `commentaire de ${runLen} lignes : viser 1 a 3`);
+    runLen = 0;
+  };
+  for (const it of node.items) {
+    if (it.kind === 'comment') {
+      // Une ligne vide separe deux commentaires distincts : le compte repart.
+      if (runLen && (src.slice(runEnd, it.start).match(/\n/g) || []).length > 1) closeRun();
+      if (runLen === 0) runStart = it.start;
+      runLen += (src.slice(it.start, it.end).match(/\n/g) || []).length + 1;
+      runEnd = it.end;
+      continue;
+    }
+    closeRun();
+  }
+  closeRun();
+
+  return out;
 }
 
 /* ------------------------------------------------------------------analyse */
@@ -264,33 +348,20 @@ function analyze(src) {
   const edits = [];
 
   for (const node of blocks) {
-    // Un commentaire sur sa propre ligne entre deux declarations coupe le bloc :
-    // les declarations de part et d'autre echappent alors au tri.
-    node.items.forEach((it, i) => {
-      if (it.kind !== 'comment') return;
-      const before = node.items.slice(0, i).some((x) => x.kind === 'decl');
-      const after = node.items.slice(i + 1).some((x) => x.kind === 'decl');
-      if (!before || !after) return;
-      findings.push({
-        line: src.slice(0, it.start).split('\n').length,
-        selector: node.prelude || '(racine)',
-        badComment: true,
-        from: it.start,
-        to: it.end,
-      });
-    });
+    if (node.descriptor) continue;
+
+    for (const w of warningsOf(node, src)) findings.push(w);
 
     for (const run of runsOf(node, src)) {
       const order = orderRun(run);
       if (order.every((v, i) => v === i)) continue;
-      const from = run[0].lineStart;
+      const from = run[0].blockStart;
       const to = run[run.length - 1].lineEnd;
-      const texts = run.map((it) => src.slice(it.lineStart, it.lineEnd).replace(/\r$/, ''));
+      const texts = run.map((it) => src.slice(it.blockStart, it.lineEnd).replace(/\r$/, ''));
       findings.push({
         line: src.slice(0, from).split('\n').length,
         selector: node.prelude || '(racine)',
         expected: order.map((i) => texts[i]).join('\n'),
-        badComment: false,
         from,
         to,
       });
@@ -324,11 +395,7 @@ function report(file, findings, cap = Infinity) {
   const lines = [];
   for (const f of findings.slice(0, cap)) {
     lines.push(`${file}:${f.line}  ${f.selector}`);
-    if (f.badComment) {
-      lines.push('  ! commentaire entre deux declarations : le bloc doit rester continu,');
-      lines.push('    remonter le commentaire au-dessus du selecteur (fin de ligne tolere).');
-      continue;
-    }
+    if (f.note) { lines.push('  ! ' + f.note); continue; }
     lines.push('  attendu :');
     for (const l of f.expected.split('\n')) lines.push('    ' + l.trim());
   }
@@ -351,7 +418,7 @@ function editedRegions(toolInput, src) {
   return regions.length ? regions : null;
 }
 
-async function runHook() {
+async function runHook(fix) {
   const chunks = [];
   for await (const c of process.stdin) chunks.push(c);
   const raw = Buffer.concat(chunks).toString('utf8');
@@ -363,7 +430,7 @@ async function runHook() {
   let src;
   try { src = readFileSync(file, 'utf8'); } catch { return 0; }
 
-  const { findings } = analyze(src);
+  const { findings, output } = analyze(src);
   if (!findings.length) return 0;
   const regions = editedRegions(data.tool_input, src);
   const touched = regions
@@ -371,9 +438,16 @@ async function runHook() {
     : findings;
   if (!touched.length) return 0;
 
+  // L'ordre se corrige seul (mecanique, prouve sans risque) ; les ecarts de convention
+  // demandent un arbitrage et remontent en feedback.
+  if (fix && output !== src) {
+    try { writeFileSync(file, output, 'utf8'); } catch { /* fichier verrouille */ }
+  }
+  const remaining = fix ? touched.filter((f) => f.note) : touched;
+  if (!remaining.length) return 0;
+
   process.stderr.write(
-    '[css-order] ordre des declarations non conforme (sablier inverse) :\n' +
-    report(file, touched, MAX_REPORTED_BLOCKS) + '\n'
+    '[css-order] conventions CSS :\n' + report(file, remaining, MAX_REPORTED_BLOCKS) + '\n'
   );
   return 2;
 }
@@ -399,6 +473,10 @@ function runFiles(mode, paths) {
             for (let b = a + 1; b < run.length; b++) {
               if (!collides(run[a].prop, run[b].prop)) continue;
               if (pos[a] > pos[b]) problems.push(`collision inversee ${run[a].prop}/${run[b].prop}`);
+              const between = order.slice(Math.min(pos[a], pos[b]) + 1, Math.max(pos[a], pos[b]));
+              if (between.some((k) => !collides(run[k].prop, run[a].prop))) {
+                problems.push(`collision separee ${run[a].prop}/${run[b].prop}`);
+              }
             }
           }
         }
@@ -411,8 +489,8 @@ function runFiles(mode, paths) {
     bad++;
     if (mode === 'write') {
       if (output !== src) { writeFileSync(file, output, 'utf8'); changed++; }
-      const comments = findings.filter((f) => f.badComment);
-      if (comments.length) console.log(report(file, comments));
+      const notes = findings.filter((f) => f.note);
+      if (notes.length) console.log(report(file, notes));
     } else {
       console.log(report(file, findings) + '\n');
     }
@@ -430,9 +508,9 @@ function runFiles(mode, paths) {
 }
 
 const [, , flag, ...rest] = process.argv;
-if (flag === '--hook') process.exit(await runHook());
+if (flag === '--hook') process.exit(await runHook(rest.includes('--fix')));
 else if (flag === '--check' || flag === '--write' || flag === '--audit') process.exit(runFiles(flag.slice(2), rest));
 else {
-  console.log('usage: css-order.mjs --hook | --check <paths> | --write <paths> | --audit <paths>');
+  console.log('usage: css-order.mjs --hook [--fix] | --check <paths> | --write <paths> | --audit <paths>');
   process.exit(0);
 }

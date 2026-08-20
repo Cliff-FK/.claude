@@ -17,7 +17,7 @@ try {
     if (-not (Test-Path -LiteralPath $engine)) { exit 0 }
 
     # stderr de node se propage tel quel : pas de 2>&1 (il fausserait $? en PS 5.1).
-    $raw | & $node.Source $engine --hook
+    $raw | & $node.Source $engine --hook --fix
     if ($LASTEXITCODE -eq 2) { exit 2 }
     exit 0
 }
