@@ -4,7 +4,6 @@
     "IMPECCABLE_NO_UPDATE_CHECK": "1"
   },
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Bash(*)",
       "PowerShell(*)",
@@ -70,10 +69,16 @@
       "Edit(~/.claude/settings.json)",
       "Write(~/.claude/settings.json)"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "~/.claude"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledPlugins": {},
+  "claudeMdExcludes": ["**/.claude/rules/doctrine/**"],
+  "language": "french",
+  "effortLevel": "high",
   "autoMode": {
     "environment": [
       "$defaults",
@@ -84,10 +89,5 @@
       "Cloud provider(s): aucun",
       "Source control: dépôts git locaux, sans remote pour la plupart"
     ]
-  },
-  "model": "opus[1m]",
-  "enableAllProjectMcpServers": true,
-  "enabledPlugins": {},
-  "language": "french",
-  "effortLevel": "high"
+  }
 }
