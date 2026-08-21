@@ -297,6 +297,30 @@ foreach ($m in [regex]::Matches($cmd, '(?<![0-9&])>{1,2}\s*(?:"([^"]+)"|''([^'']
     $depositTargets += $t
 }
 
+# --- 2e. Ensemble des CIBLES d'écriture/destruction ---------------------------
+# Un chemin hors zone n'est une menace que s'il est une CIBLE (déposé/muté/créé),
+# pas une simple SOURCE DE LECTURE. Ex. `unzip src.zip > c:\tmp\x` ou
+# `cp /c/Users/.../src /c/tmp/dst` : lecture hors zone, écriture EN zone → licite,
+# conformément à « lectures autorisées partout » (exfil de secrets = guard-secrets-read).
+# FAIL-CLOSED : si AUCUNE cible n'est identifiable sur une commande destructive, on
+# retombe au comportement strict (tout chemin hors zone bloque), cf. §3.
+$writeTargets = @()
+foreach ($t in $depositTargets) { $writeTargets += (Normalize-Path $t) }
+# Familles qui MUTENT/DÉTRUISENT/CRÉENT en place : chaque chemin de leur propre
+# segment est une cible. NE PAS inclure cp/mv/copy/move (déjà en dernier-arg via
+# depositTargets) : sinon leur SOURCE de lecture serait prise pour une cible.
+$inPlaceRx = '(?i)\b(rm|rmdir|del|erase|rd|shred|truncate|chmod|chown|dd|touch|mkdir|ln|Remove-Item|Delete-Item|Clear-Content|Set-Content|Add-Content|Out-File|New-Item|Rename-Item)\b(?<args>[^;&|\r\n]*)'
+foreach ($m in [regex]::Matches($cmd, $inPlaceRx)) {
+    $seg = $m.Groups['args'].Value
+    $segNoQ = $seg
+    foreach ($pm in [regex]::Matches($seg, $quotedPathRegex)) {
+        $writeTargets += (Normalize-Path $pm.Groups[1].Value)
+        $segNoQ = $segNoQ.Remove($pm.Index, $pm.Length).Insert($pm.Index, (' ' * $pm.Length))
+    }
+    foreach ($pm in [regex]::Matches($segNoQ, $pathRegex)) { $writeTargets += (Normalize-Path $pm.Value) }
+}
+$anyWriteTarget = ($writeTargets.Count -gt 0)
+
 # --- 3. Vérifier chaque path absolu trouvé (quotés + non quotés) --------------
 foreach ($p in $collectedPaths) {
     if ($p -match '\.(exe|bat|cmd|sh|ps1|py|pl|rb|jar|phar)$') {
@@ -309,6 +333,15 @@ foreach ($p in $collectedPaths) {
     if ($p -match '/dev/(null|stdout|stderr|tty)') { continue }
     if ($p -match '^[a-z]:/+(localhost|[a-z0-9.-]+\.[a-z]{2,})(:\d+)?(/|$)') { continue }  # fragments d'URL (host[:port] avec ou sans chemin)
     if (-not (Is-PathInProject $p)) {
+        # Hors zone : ne bloquer que si c'est une CIBLE d'écriture/destruction.
+        # Si des cibles ont été identifiées et que ce chemin n'en est pas une → SOURCE
+        # DE LECTURE, autorisée. Si AUCUNE cible identifiable → fail-closed, on bloque.
+        if ($anyWriteTarget) {
+            $pN = Normalize-Path $p
+            $isTgt = $false
+            foreach ($t in $writeTargets) { if ($t -eq $pN) { $isTgt = $true; break } }
+            if (-not $isTgt) { continue }
+        }
         Reject "BLOQUÉ (écriture/destruction hors projet : '$p'). Zones autorisées : $($allowedRoots -join ', ')"
     }
 }
