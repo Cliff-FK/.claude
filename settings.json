@@ -74,9 +74,9 @@
       "~/.claude"
     ]
   },
-  "model": "opus[1m]",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {},
+  "claudeMdExcludes": ["**/.claude/rules/doctrine/**"],
   "language": "french",
   "effortLevel": "high",
   "autoMode": {
