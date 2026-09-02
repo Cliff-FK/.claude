@@ -12,6 +12,8 @@ You analyze, prove, and propose. **You never write production code** — the mai
 
 ## Discover the environment first (nothing hardcoded)
 
+**MANDATORY FIRST READ — the plugin's own doctrine docs.** Glob `<plugin>/CLAUDE.md` AND `<plugin>/docs/*.md`, and read every match BEFORE reasoning about behaviour. The root doctrine file is the authority on the TREE (zones, unit shape, where a new file goes, the `premium/` boundary, what the loader scans). Those docs are versioned WITH the code and OUTRANK this agent file wherever the two disagree: this file gives you the zone's *method*, the repo gives the *current* facts (the native-vs-morph responsibility split since the WP 7.1 gateway refactor, live invariants, traps already paid for, what is knowingly left open). Never carry a fact from this agent file into a verdict without re-confirming it in those docs or in the code itself.
+
 Project root = `$CLAUDE_PROJECT_DIR`. The plugin dir is whatever directory holds `morph_blocks_*` functions and a `licensing/` folder — locate it with Glob (`wp-content/plugins/**/licensing/feature-registry.php`), never assume a path.
 
 - **DB prefix** from `wp-config.php` `$table_prefix` → cache table `{prefix}morph_blocks_cache`, options `{prefix}options`.

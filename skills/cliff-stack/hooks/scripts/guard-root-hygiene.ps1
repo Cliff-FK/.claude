@@ -1,4 +1,4 @@
-# guard-root-hygiene.ps1 — Hygiène de la racine du projet (GLOBAL, multiprojets)
+﻿# guard-root-hygiene.ps1 — Hygiène de la racine du projet (GLOBAL, multiprojets)
 #
 # Rôle : empêcher la pollution de la racine du projet par des artefacts de
 # session (captures d'écran, .md de travail, fichiers de sortie, package.json
@@ -116,31 +116,41 @@ if ($tool -ne 'Bash' -and $tool -ne 'PowerShell') { exit 0 }
 $cmd = $payload.tool_input.command
 if (-not $cmd) { exit 0 }
 
+# Ce qui n'est pas du shell est retiré AVANT d'y chercher des redirections : corps des
+# heredocs et code passé en ligne (python -c, php -r, node -e…). Sinon un `=>`, un `<>`
+# ou une balise `<style …>` DANS le contenu écrit passe pour une redirection et bloque
+# une commande légitime.
+$scan = $cmd
+$scan = [regex]::Replace($scan, '(?s)<<-?\s*[\x27"]?(\w+)[\x27"]?\r?\n.*?\r?\n\s*\1\b', ' ')
+$scan = [regex]::Replace($scan, '(?is)\b(?:python3?|php|node|perl|ruby)\s+(?:-\w+\s+)*-(?:c|r|e)\s+(?:"(?:[^"\\]|\\.)*"|\x27(?:[^\x27\\]|\\.)*\x27)', ' ')
+
 # npm/pnpm/yarn/bun install|init SANS package.json racine existant → en créerait un
 if (-not (Test-Path (Join-Path $projectRootNorm 'package.json'))) {
-    if ($cmd -match '(?i)(^|[;&|]\s*)(npm|pnpm|yarn|bun)\s+(install|i|add|init)\b' -and
-        $cmd -notmatch '(?i)(^|[;&|]\s*)(cd|pushd|set-location|chdir)\s') {
+    if ($scan -match '(?i)(^|[;&|]\s*)(npm|pnpm|yarn|bun)\s+(install|i|add|init)\b' -and
+        $scan -notmatch '(?i)(^|[;&|]\s*)(cd|pushd|set-location|chdir)\s') {
         Reject "BLOQUÉ (hygiène racine) : ce '$($matches[2]) $($matches[3])' créerait un package.json à la racine du projet (aucun n'y existe). Lance-le dans le sous-dossier outillé (ex. cd .vite) ou dans le scratchpad."
     }
 }
 
 # Un cd/pushd dans la commande rend le cwd incertain → on ne juge alors que les
 # chemins qui désignent EXPLICITEMENT la racine (absolus) ; les noms nus sont skippés.
-$hasCd = $cmd -match '(?i)(^|[;&|]\s*)(cd|pushd|set-location|chdir)\s'
+$hasCd = $scan -match '(?i)(^|[;&|]\s*)(cd|pushd|set-location|chdir)\s'
 
 $targets = @()
-# Redirections > / >> (cible quotée ou nue), hors flux (&1, /dev/null…)
-foreach ($m in [regex]::Matches($cmd, '(?<![0-9&])>{1,2}\s*(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>]+))')) {
+# Redirections > / >> (cible quotée ou nue), hors flux (&1, /dev/null…) et hors opérateurs
+# de langage qui contiennent un chevron (`=>`, `->`, `<>`, `>=`) : les prendre pour une
+# redirection bloquait des commandes légitimes.
+foreach ($m in [regex]::Matches($scan, '(?<![0-9&=<>\-])>{1,2}(?!=)\s*(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>]+))')) {
     $t = if ($m.Groups[1].Value) { $m.Groups[1].Value } elseif ($m.Groups[2].Value) { $m.Groups[2].Value } else { $m.Groups[3].Value }
     $targets += $t
 }
 # tee / touch
-foreach ($m in [regex]::Matches($cmd, '(?i)\b(tee|touch)\s+(?:-a\s+)?(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>-][^\s;&|<>]*))')) {
+foreach ($m in [regex]::Matches($scan, '(?i)\b(tee|touch)\s+(?:-a\s+)?(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>-][^\s;&|<>]*))')) {
     $t = if ($m.Groups[2].Value) { $m.Groups[2].Value } elseif ($m.Groups[3].Value) { $m.Groups[3].Value } else { $m.Groups[4].Value }
     $targets += $t
 }
 # Cmdlets PowerShell écrivains : -Path/-FilePath/-LiteralPath ou 1er argument positionnel
-foreach ($m in [regex]::Matches($cmd, '(?i)\b(Out-File|Set-Content|Add-Content|New-Item)\b[^;&|\r\n]*')) {
+foreach ($m in [regex]::Matches($scan, '(?i)\b(Out-File|Set-Content|Add-Content|New-Item)\b[^;&|\r\n]*')) {
     $seg = $m.Value
     if ($seg -match '(?i)-(File|Literal)?Path\s+(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>]+))') {
         $t = if ($matches[2]) { $matches[2] } elseif ($matches[3]) { $matches[3] } else { $matches[4] }
@@ -151,7 +161,7 @@ foreach ($m in [regex]::Matches($cmd, '(?i)\b(Out-File|Set-Content|Add-Content|N
     }
 }
 # cp/mv & équivalents : dernière cible du segment = dépôt
-foreach ($m in [regex]::Matches($cmd, '(?i)\b(cp|mv|copy|move|xcopy|robocopy|Copy-Item|Move-Item)\b(?<args>[^;&|\r\n]*)')) {
+foreach ($m in [regex]::Matches($scan, '(?i)\b(cp|mv|copy|move|xcopy|robocopy|Copy-Item|Move-Item)\b(?<args>[^;&|\r\n]*)')) {
     $seg = $m.Groups['args'].Value
     $segT = @()
     foreach ($pm in [regex]::Matches($seg, '(?:"([^"]+)"|''([^'']+)''|([^\s;&|<>-][^\s;&|<>]*))')) {
