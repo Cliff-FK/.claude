@@ -7,27 +7,14 @@
     "allow": [
       "Bash(*)",
       "PowerShell(*)",
-      "Read(*)",
-      "Edit(*)",
-      "Write(*)",
+      "Read(//**)",
+      "Edit(//**)",
       "WebFetch(*)",
       "WebSearch",
+      "Skill",
+      "Agent",
       "mcp__playwright__*",
-      "mcp__context7__*",
-      "Skill(deep-research)",
-      "Skill(deep-research:*)",
-      "Skill(research-arbitrate)",
-      "Skill(research-arbitrate:*)",
-      "Skill(impeccable)",
-      "Skill(impeccable:*)",
-      "Read(//c/MAMP/htdocs/**)",
-      "Read(//c/tmp/**)",
-      "Skill(generator-critic-verifier)",
-      "Skill(generator-critic-verifier:*)",
-      "Skill(update-config)",
-      "Skill(update-config:*)",
-      "Skill(claude-api)",
-      "Skill(claude-api:*)"
+      "mcp__context7__*"
     ],
     "deny": [
       "Read(**/.env)",
@@ -65,18 +52,15 @@
     "ask": [
       "Workflow",
       "Edit(~/.claude/skills/cliff-stack/hooks/**)",
-      "Write(~/.claude/skills/cliff-stack/hooks/**)",
-      "Edit(~/.claude/settings.json)",
-      "Write(~/.claude/settings.json)"
+      "Write(~/.claude/skills/cliff-stack/hooks/**)"
     ],
-    "defaultMode": "auto",
+    "defaultMode": "bypassPermissions",
     "additionalDirectories": [
       "~/.claude"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {},
-  "claudeMdExcludes": ["**/.claude/rules/doctrine/**"],
   "language": "french",
   "effortLevel": "high",
   "autoMode": {

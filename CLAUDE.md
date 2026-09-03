@@ -5,13 +5,16 @@ Toujours répondre en français (orthographe complète, accents respectés).
 - **Contenu produit (textes UI, copy, descriptions, modales) : éviter les marqueurs « IA »** : pas de tirets cadratin/demi-cadratin (« — », « – ») en ponctuation (virgule/point/deux-points/parenthèses à la place), pas d'émojis ni d'icônes décoratives, pas de gras emphatique gratuit. Ponctuation simple et phrases qui se lisent. Trait d'union des mots composés OK.
 
 ## Sécurité Claude Code (NE PAS désactiver)
-Poste en **liberté shell maximale** (allow global sur shell/web/fichiers ; MCP : seuls `playwright` et `context7` sont allow — tout autre serveur promptera, c'est normal) **+ barrière par 4 hooks `PreToolUse`** (guard-write-scope, guard-secrets-read, guard-git-destructive, guard-root-hygiene) **câblés dans le plugin cliff-stack** (`~/.claude/skills/cliff-stack/hooks/hooks.json`) + `permissions.deny` en filet. Détail : `~/.claude/SECURITY-SETUP.md`.
+Poste en **autonomie maximale** : `permissions.defaultMode: "bypassPermissions"` (`~/.claude/settings.json`) **+ barrière par 4 hooks `PreToolUse`** (guard-write-scope, guard-secrets-read, guard-git-destructive, guard-root-hygiene) **câblés dans le plugin cliff-stack** (`~/.claude/skills/cliff-stack/hooks/hooks.json`) + `permissions.deny` en filet.
+- La barrière réelle, ce sont **les hooks et les `deny`** : ils s'appliquent dans tous les modes, bypass compris. Les `allow` n'ont aucun effet en bypass, et les plus larges (`Bash(*)`, `PowerShell(*)`, `Agent`) sont supprimées d'office en mode auto : ne jamais compter sur elles.
+- Interrompent encore, et c'est voulu : les règles `ask` (`Workflow`, édition des scripts de hooks), `AskUserQuestion`, `rm` visant un chemin critique.
+- **Extension VS Code** : le mode ne vient pas de `~/.claude/settings.json` seul, il faut aussi `claudeCode.allowDangerouslySkipPermissions: true` et `claudeCode.initialPermissionMode` dans les réglages utilisateur VS Code, sinon la conversation démarre en Manual. Le mode se fixe à l'ouverture d'une conversation, jamais à chaud.
 - **Ne jamais réintroduire de règles `allow` par projet** (inutile, génère des prompts).
 - Un hook bloque à tort → **corriger le script** (`~/.claude/skills/cliff-stack/hooks/scripts/`), **pas le câblage** ; écrire hors projet → lancer ce dossier comme projet (ne pas contourner).
 
 ## Style de travail
 - Tâche non triviale → analyse dense, structurée à la profondeur que le problème exige, ouvrir par l'outcome ; tâche triviale → réponse directe courte. (Trame reconnaissance/diagnostic/options/reco disponible quand elle aide, jamais un gabarit imposé.)
-- Write/Edit sans validation **seulement si** la réponse à apporter est évidente **et** ne modifie pas un code majeur existant ; sinon, valider d'abord.
+- **Agir, ne pas demander.** Write/Edit, correctifs et refactors se font en autonomie, y compris sur du code existant : prouver, écrire, tester, rendre compte. Ne s'arrêter pour valider que sur un choix réellement indécidable seul (et alors : tenter d'abord un critique adversarial), ou une action irréversible hors du périmètre demandé.
 
 ## Mémoire (durcit le comportement par défaut du harness)
 - **Filtre anti-doublon obligatoire AVANT toute écriture mémoire** (fichier sous `~/.claude/projects/.../memory/` + entrée `MEMORY.md`) : PROUVER d'abord que le fait n'est capturé **nulle part ailleurs** — code, commentaire de code, message de commit/git, `CLAUDE.md` (global ou projet), `rules/`, README. **Si un commentaire de code que je viens d'écrire, ou tout artefact du dépôt, documente déjà l'info → NE PAS consigner.** En cas de doute → ne pas écrire. Objectif : zéro historique redondant ; la mémoire ne garde que le vraiment non capturable par le dépôt.
