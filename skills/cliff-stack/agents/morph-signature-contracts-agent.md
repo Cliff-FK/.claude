@@ -18,10 +18,12 @@ A breach of any of these = orphaned sigs / 0 swap, or stale caches served in pro
 
 ## Discover the environment first — nothing hardcoded
 
+**MANDATORY FIRST READ — the plugin's own doctrine docs.** Glob `<plugin>/CLAUDE.md` AND `<plugin>/docs/*.md`, and read every match BEFORE reasoning about behaviour. The root doctrine file is the authority on the TREE (zones, unit shape, where a new file goes, the `premium/` boundary, what the loader scans). Those docs are versioned WITH the code and OUTRANK this agent file wherever the two disagree: this file gives you the zone's *method*, the repo gives the *current* facts (the native-vs-morph responsibility split since the WP 7.1 gateway refactor, live invariants, traps already paid for, what is knowingly left open). Never carry a fact from this agent file into a verdict without re-confirming it in those docs or in the code itself.
+
 Before any analysis, resolve the real values. Never assume paths, prefixes, slugs or constant values from memory or from this file's examples.
 
-- **Plugin root**: discover, do not hardcode. From `$CLAUDE_PROJECT_DIR`, locate the plugin via `Glob "**/morph-blocks/includes/constants.php"`. Everything below is relative to that `morph-blocks/` dir.
-- **Constant VALUES**: always read them live from `includes/constants.php` (e.g. `MORPH_BLOCKS_SCHEMA_VER` is `cls6` *today* — it will move; never assume). The current value and its changelog comment are the source of truth.
+- **Plugin root**: discover, do not hardcode. From `$CLAUDE_PROJECT_DIR`, locate the plugin via `Glob "**/morph-blocks/includes/core/constants.php"`. Everything below is relative to that `morph-blocks/` dir.
+- **Constant VALUES**: always read them live from `includes/core/constants.php` (`MORPH_BLOCKS_SCHEMA_VER` moves with every payload-format change; never quote a value from memory). The current value and its changelog comment are the source of truth.
 - **DB prefix**: if you ever inspect the cache table, read it from `wp-config.php` (`$table_prefix`) — never assume `wp_`. Table name comes from `MORPH_BLOCKS_TABLE` / `morph_blocks_table()`, not a literal.
 - **Theme presets / breakpoints**: discover real values via `morph_blocks_get_viewport('mobile'|'tablet')` and the option `morph_blocks_settings`, and (WP 7.1+) `wp_get_block_viewport_sizes()`. Never assume 480/782 or any literal — they are presets the user can override.
 - **Block sources**: classification (`source` per attribute) comes from `WP_Block_Type_Registry`, never from a hardcoded list of block names.
@@ -55,14 +57,14 @@ The sig is `pos_` + first 12 hex of `md5(payload)`, where `payload = name . '|' 
 
 ## Key files (paths relative to the discovered `morph-blocks/` dir) — role
 
-- `includes/signature.php` — **PHP side of contract #1**. `morph_blocks_block_signature()`, `morph_blocks_norm_floats_for_hash()`, `morph_blocks_walk_blocks()`. Source of truth for the sig algorithm.
-- `assets/js/preSave-builder.js` — **JS side of contract #1**. `blockSignature()` (inline md5), float twin, `mbStableJson` (U+2028/2029), the registry that writes `edits.meta[META_JS_HTML]`. Must mirror signature.php exactly.
-- `includes/constants.php` — **contract #2 source of truth**. All identifiers + `morph_blocks_constants_for_js()` + `MORPH_BLOCKS_SCHEMA_VER` + its changelog comment.
-- `includes/viewport.php` — **breakpoint source of truth** (`morph_blocks_get_viewport`). Feeds prepaint, store.js (`window.morphBlocksBp`) and the `@media` CSS in runtime-serve.
-- `assets/js/store.js` — consumer of `morphBlocksConst` fallbacks + `morphBlocksBp`. Check its hardcoded fallback identifiers match PHP.
-- `includes/prepaint.php` — emits `window.morphBlocksBp` + uses DSIG/DAPP/markers; must share breakpoints with store.js and CSS.
-- `includes/render-mutate.php`, `includes/save-handler.php`, `includes/runtime-serve.php` — **consumers** of sig + constants + schema. You don't own their logic; you check they don't break a contract (e.g. a payload key added without a SCHEMA_VER bump).
-- `includes/compile.php` — localizes `morphBlocksConst` + `morphBlocksCfg` (breakpoints) to JS.
+- `includes/core/signature.php` — **PHP side of contract #1**. `morph_blocks_block_signature()`, `morph_blocks_norm_floats_for_hash()`, `morph_blocks_walk_blocks()`. Source of truth for the sig algorithm.
+- `includes/core/preSave-builder.js` — **JS side of contract #1**. `blockSignature()` (inline md5), float twin, `mbStableJson` (U+2028/2029), the registry that writes `edits.meta[META_JS_HTML]`. Must mirror signature.php exactly.
+- `includes/core/constants.php` — **contract #2 source of truth**. All identifiers + `morph_blocks_constants_for_js()` + `MORPH_BLOCKS_SCHEMA_VER` + its changelog comment.
+- `includes/core/viewport.php` — **breakpoint source of truth** (`morph_blocks_get_viewport`). Feeds prepaint, store.js (`window.morphBlocksBp`) and the `@media` CSS in runtime-serve.
+- `includes/core/store.js` — consumer of `morphBlocksConst` fallbacks + `morphBlocksBp`. Check its hardcoded fallback identifiers match PHP.
+- `includes/addons/prepaint/prepaint.php` — emits `window.morphBlocksBp` + uses DSIG/DAPP/markers; must share breakpoints with store.js and CSS.
+- `includes/core/render-mutate.php`, `includes/core/save-handler.php`, `includes/core/runtime-serve.php` — **consumers** of sig + constants + schema. You don't own their logic; you check they don't break a contract (e.g. a payload key added without a SCHEMA_VER bump).
+- `includes/core/compile.php` — localizes `morphBlocksConst` + `morphBlocksCfg` (breakpoints) to JS.
 
 ---
 

@@ -10,10 +10,12 @@ You are the **orchestrator** of the morph-blocks plugin. You do not fix a zone y
 
 ## Discover the environment first (nothing hardcoded)
 
+**MANDATORY FIRST READ — the plugin's own doctrine docs.** Glob `<plugin>/CLAUDE.md` AND `<plugin>/docs/*.md`, and read every match BEFORE reasoning about behaviour. The root doctrine file is the authority on the TREE (zones, unit shape, where a new file goes, the `premium/` boundary, what the loader scans). Those docs are versioned WITH the code and OUTRANK this agent file wherever the two disagree: this file gives you the zone's *method*, the repo gives the *current* facts (the native-vs-morph responsibility split since the WP 7.1 gateway refactor, live invariants, traps already paid for, what is knowingly left open). Never carry a fact from this agent file into a verdict without re-confirming it in those docs or in the code itself.
+
 Project root = `$CLAUDE_PROJECT_DIR`. Before routing, locate the moving parts (do NOT assume a path, prefix, post ID or URL):
 - **Plugin dir**: Glob `wp-content/plugins/**/morph-blocks*.php` (or the dir holding `morph_blocks_*` functions). If morph-blocks is absent, say so and stop.
 - **DB prefix**: `$table_prefix` from `wp-config.php` → cache table `{prefix}morph_blocks_cache`.
-- **Single source of truth for identifiers**: `includes/constants.php` — read the REAL current values (`MORPH_BLOCKS_SCHEMA_VER`, `MORPH_BLOCKS_META_JS_HTML`, `MORPH_BLOCKS_HTML_DATA_SIG/APPLIED`, markers, suffixes) before reasoning about parity. Never quote a constant from memory.
+- **Single source of truth for identifiers**: `includes/core/constants.php` — read the REAL current values (`MORPH_BLOCKS_SCHEMA_VER`, `MORPH_BLOCKS_META_JS_HTML`, `MORPH_BLOCKS_HTML_DATA_SIG/APPLIED`, markers, suffixes) before reasoning about parity. Never quote a constant from memory.
 - **Free vs Pro build**: check whether `licensing/premium-variants.php`, `class-entitlements.php`, `matrix.json` are physically present. Their ABSENCE (not a flag) is the free boundary; it cascades (empty registry → `classify_variation()` null → `feat[]` never tagged → only sourceless structural attrs cloneable). Diagnose accordingly.
 - **WP-CLI / front URL / test post**: prefer values passed in the invocation; else discover via the project wrapper / `wp` (delegate the actual runs to the zone agents — you orchestrate, you don't drive Playwright/Bash yourself).
 

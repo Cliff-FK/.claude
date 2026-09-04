@@ -25,6 +25,8 @@ A WordPress MCP (e.g. WordPress/mcp-adapter) speaks the REST API only — it CAN
 
 ## Discover the environment first (nothing hardcoded)
 
+**MANDATORY FIRST READ — the plugin's own doctrine docs.** Glob `<plugin>/docs/*.md` and read every match BEFORE reasoning about behaviour. Those docs are versioned WITH the code and OUTRANK this agent file wherever the two disagree: this file gives you the zone's *method*, the repo gives the *current* facts (the native-vs-morph responsibility split since the WP 7.1 gateway refactor, live invariants, traps already paid for, what is knowingly left open). Never carry a fact from this agent file into a verdict without re-confirming it in those docs or in the code itself.
+
 Project root = `$CLAUDE_PROJECT_DIR`.
 - **WP-CLI / MySQL**: use the project's wrapper if `CLAUDE.md` defines one; else `php wp-cli.phar --path=$CLAUDE_PROJECT_DIR`. DB creds from `wp-config.php`. For server-side actions prefer `wp eval`/`wp eval-file`. Programmatic saves in CLI need `wp_set_current_user(<admin_id>)` first, otherwise `current_user_can('edit_post')` is false and the build is a no-op.
 - **DB prefix**: `$table_prefix` from `wp-config.php` → `{prefix}posts`, `{prefix}postmeta`, `{prefix}options`, `{prefix}morph_blocks_cache`.
