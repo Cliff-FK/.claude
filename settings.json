@@ -54,7 +54,7 @@
       "Edit(~/.claude/skills/cliff-stack/hooks/**)",
       "Write(~/.claude/skills/cliff-stack/hooks/**)"
     ],
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "additionalDirectories": [
       "~/.claude"
     ]
