@@ -73,5 +73,6 @@
       "Cloud provider(s): aucun",
       "Source control: dépôts git locaux, sans remote pour la plupart"
     ]
-  }
+  },
+  "agentPushNotifEnabled": true
 }
