@@ -74,5 +74,6 @@
       "Source control: dépôts git locaux, sans remote pour la plupart"
     ]
   },
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "model": "claude-fable-5-1[1m]"
 }
