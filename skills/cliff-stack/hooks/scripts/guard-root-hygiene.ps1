@@ -11,7 +11,8 @@
 # Couvre 3 canaux :
 #   1. Write/Edit/MultiEdit/NotebookEdit → file_path à la racine
 #   2. Captures Playwright MCP (take_screenshot / pdf_save) → filename OBLIGATOIRE
-#      et préfixé ".playwright-mcp/" (relatif au cwd serveur = racine projet)
+#      et NU : un chemin relatif se résout depuis le cwd du serveur, soit la
+#      racine du projet ; un nom nu part dans son --output-dir, hors dépôt
 #   3. Bash/PowerShell → cibles de dépôt (redirections, tee/touch, Set-Content…,
 #      cp/mv) résolvant à la racine + npm/pnpm/yarn install créant un package.json
 #
@@ -73,7 +74,7 @@ function Assert-RootTarget([string]$path, [string]$channel) {
     $base = (Split-Path $resolved -Leaf).ToLower()
     if ($rootAllow -contains $base) { return }
     Reject ("BLOQUÉ (hygiène racine, $channel) : création de '" + (Split-Path $resolved -Leaf) + "' à la racine du projet interdite. " +
-        "Captures/artefacts navigateur → .playwright-mcp\ ; fichiers temporaires → scratchpad de session ; docs → un sous-dossier du projet. " +
+        "Captures navigateur : filename nu, le serveur MCP les écrit hors dépôt ; fichiers temporaires → scratchpad de session ; docs → un sous-dossier du projet. " +
         "Si ce fichier racine est vraiment légitime (demande explicite de l'utilisateur), ajouter son nom dans .claude\root-allow.txt du projet.")
 }
 
@@ -88,23 +89,20 @@ if ($tool -in @('Write','Edit','MultiEdit','NotebookEdit')) {
 }
 
 # ==============================================================================
-# 2. Captures Playwright MCP — filename OBLIGATOIRE, préfixé .playwright-mcp/
-#    (le serveur écrit relativement à son cwd = racine projet ; sans filename,
-#    la capture par défaut "page-<timestamp>.png" atterrirait à la racine)
+# 2. Captures Playwright MCP — filename NU, aucun dossier devant
+#    Le serveur résout un filename RELATIF depuis son cwd, soit la racine du
+#    projet : un nom préfixé d'un dossier y recrée ce dossier. Un nom nu, lui,
+#    tombe dans le dossier déclaré au serveur par --output-dir, hors dépôt.
 # ==============================================================================
 if ($tool -match '^mcp__playwright__browser_(take_screenshot|pdf_save)$') {
     $fn = $payload.tool_input.filename
     if (-not $fn) {
-        Reject "BLOQUÉ (hygiène racine) : capture Playwright sans filename → atterrirait à la racine du projet. Repasse l'appel avec filename: '.playwright-mcp/<nom-parlant>.png' (ou .jpeg/.pdf)."
+        Reject "BLOQUÉ (hygiène racine) : capture Playwright sans filename. Repasse l'appel avec filename: '<nom-parlant>.png' (ou .jpeg/.pdf), sans dossier devant."
     }
-    $fnNorm = ($fn -replace '\\','/')
-    $absOk = $fnNorm -replace '/','\'
-    $insideOutputDir = $absOk.ToLower().StartsWith((Join-Path $projectRootLower '.playwright-mcp\'))
-    if ($fnNorm -match '(^|/)\.\.(/|$)') {
-        Reject "BLOQUÉ (hygiène racine) : filename de capture avec '..' interdit. Utilise filename: '.playwright-mcp/<nom>.png'."
-    }
-    if (-not ($fnNorm.StartsWith('.playwright-mcp/') -or $insideOutputDir)) {
-        Reject "BLOQUÉ (hygiène racine) : toute capture Playwright doit être écrite sous .playwright-mcp\ du projet. Repasse l'appel avec filename: '.playwright-mcp/$fnNorm'."
+    if ($fn -match '[\\/]') {
+        $nu = ($fn -replace '\\','/' -split '/')[-1]
+        Reject ("BLOQUÉ (hygiène racine) : filename de capture avec un chemin ('$fn') — il se résout depuis la racine du projet et l'y écrit. " +
+            "Repasse l'appel avec filename: '$nu', sans dossier devant : le serveur le pose dans son --output-dir, hors dépôt.")
     }
     exit 0
 }
