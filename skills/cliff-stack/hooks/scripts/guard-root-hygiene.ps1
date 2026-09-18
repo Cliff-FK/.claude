@@ -10,9 +10,10 @@
 #
 # Couvre 3 canaux :
 #   1. Write/Edit/MultiEdit/NotebookEdit → file_path à la racine
-#   2. Captures Playwright MCP (take_screenshot / pdf_save) → filename OBLIGATOIRE
-#      et NU : un chemin relatif se résout depuis le cwd du serveur, soit la
-#      racine du projet ; un nom nu part dans son --output-dir, hors dépôt
+#   2. Captures Playwright MCP (take_screenshot / pdf_save) → un filename relatif,
+#      nom nu compris, se résout depuis la racine du projet (mesuré) : jugé comme
+#      toute écriture. Le serveur refuse tout chemin hors du projet : la cible
+#      saine est son dossier de sortie, .playwright-mcp\
 #   3. Bash/PowerShell → cibles de dépôt (redirections, tee/touch, Set-Content…,
 #      cp/mv) résolvant à la racine + npm/pnpm/yarn install créant un package.json
 #
@@ -74,7 +75,7 @@ function Assert-RootTarget([string]$path, [string]$channel) {
     $base = (Split-Path $resolved -Leaf).ToLower()
     if ($rootAllow -contains $base) { return }
     Reject ("BLOQUÉ (hygiène racine, $channel) : création de '" + (Split-Path $resolved -Leaf) + "' à la racine du projet interdite. " +
-        "Captures navigateur : filename nu, le serveur MCP les écrit hors dépôt ; fichiers temporaires → scratchpad de session ; docs → un sous-dossier du projet. " +
+        "Captures navigateur : filename '.playwright-mcp\<nom>.png', dossier de sortie du serveur MCP (il refuse tout chemin hors du projet) ; fichiers temporaires → scratchpad de session ; docs → un sous-dossier du projet. " +
         "Si ce fichier racine est vraiment légitime (demande explicite de l'utilisateur), ajouter son nom dans .claude\root-allow.txt du projet.")
 }
 
@@ -89,21 +90,14 @@ if ($tool -in @('Write','Edit','MultiEdit','NotebookEdit')) {
 }
 
 # ==============================================================================
-# 2. Captures Playwright MCP — filename NU, aucun dossier devant
-#    Le serveur résout un filename RELATIF depuis son cwd, soit la racine du
-#    projet : un nom préfixé d'un dossier y recrée ce dossier. Un nom nu, lui,
-#    tombe dans le dossier déclaré au serveur par --output-dir, hors dépôt.
+# 2. Captures Playwright MCP — le serveur résout un filename relatif depuis la
+#    racine de l'espace de travail : un nom nu y crée le fichier (mesuré le
+#    18/09/2026). Sans filename, la capture part dans le dossier de sortie du
+#    serveur, un sous-dossier : libre.
 # ==============================================================================
 if ($tool -match '^mcp__playwright__browser_(take_screenshot|pdf_save)$') {
     $fn = $payload.tool_input.filename
-    if (-not $fn) {
-        Reject "BLOQUÉ (hygiène racine) : capture Playwright sans filename. Repasse l'appel avec filename: '<nom-parlant>.png' (ou .jpeg/.pdf), sans dossier devant."
-    }
-    if ($fn -match '[\\/]') {
-        $nu = ($fn -replace '\\','/' -split '/')[-1]
-        Reject ("BLOQUÉ (hygiène racine) : filename de capture avec un chemin ('$fn') — il se résout depuis la racine du projet et l'y écrit. " +
-            "Repasse l'appel avec filename: '$nu', sans dossier devant : le serveur le pose dans son --output-dir, hors dépôt.")
-    }
+    if ($fn) { Assert-RootTarget $fn 'capture Playwright' }
     exit 0
 }
 
