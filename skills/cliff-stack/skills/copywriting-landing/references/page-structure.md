@@ -36,7 +36,7 @@
 - Pricing 3-4 tiers, anchoring, garantie, hiérarchie freemium.
 
 ## Freemium — hiérarchie de CTA
-Ordre de mise en avant : **payant > trial avec carte > trial sans carte > gratuit**. Dé-emphasiser le gratuit sur la page de vente (le mettre en dernier recours), sinon il cannibalise les conversions payantes (benchmark free→paid ~2 %). Mécanique d'offre/trial/dunning : la plateforme de facturation/licence du projet.
+Ordre de mise en avant : **payant > trial avec carte > trial sans carte > gratuit**. Dé-emphasiser le gratuit sur la page de vente (le mettre en dernier recours), sinon il cannibalise les conversions payantes (benchmark free→paid ~2 %). Mécanique d'offre/trial/dunning : [[freemius]].
 
 ---
 

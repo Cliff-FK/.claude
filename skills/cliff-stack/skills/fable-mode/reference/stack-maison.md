@@ -26,6 +26,7 @@ But : router vers le bon skill/agent SANS coder de nom en dur (les noms peuvent 
 | Plan d'acquisition payante | skill paid ads |
 | Upsell free→pro DANS l'éditeur Gutenberg | skill in-product upgrade prompts |
 | Optimisation readme.txt / classement repo WordPress.org | skill wporg readme optimizer |
+| Freemius (code + produit) | skill freemius |
 | Audit conformité plugin avant livraison | skill plugin check |
 | Vrai save humain éditeur via Playwright | skill wp save UI test |
 | Minifier JS/CSS | skill minify assets |

@@ -7,7 +7,7 @@
 - [2. Save-rates — ce qui est réel](#2-save-rates--ce-qui-est-réel)
 - [3. Choix d'offres](#3-choix-doffres)
 - [4. Garde-fous légaux (datés)](#4-garde-fous-légaux-datés)
-- [5. Plateforme de facturation : fourni vs à bâtir](#5-plateforme-de-facturation--fourni-vs-à-bâtir)
+- [5. Freemius : natif vs à bâtir](#5-freemius--natif-vs-à-bâtir)
 - [6. Sources](#6-sources)
 
 ## 1. Structure du flow
@@ -39,9 +39,9 @@
 - ❌ INTERDIT : annulation plus longue/complexe que la souscription ; multiplier les écrans obligatoires ; masquer/dégrader « Annuler quand même » ; faux compte à rebours/urgence ; cases pré-cochées ; guilt-tripping agressif.
 - **Principe cardinal** : l'annulation **aussi facile que la souscription** ; l'offre ne bloque jamais le bouton d'annulation final.
 
-## 5. Plateforme de facturation : fourni vs à bâtir
-- **Fourni en général** : un sondage de raison d'annulation dans l'espace client (raisons prédéfinies + « Autre » libre), exposé par événements, webhooks, API ou email transactionnel. Certaines plateformes ajoutent un dialogue « conserver ou annuler » : **guidance, pas offre**. Toujours vérifier sur la doc de la plateforme du projet ce qui existe réellement.
-- **À bâtir (couche maison)** : la logique « raison → offre matchée » (pause/downgrade/coupon présentés selon la raison) est rarement fournie. Implémentation : webhook/feedback capte la raison → UI custom présente l'offre (coupon/pause via l'API de la plateforme) **avant** l'appel d'annulation. Les coupons visent souvent le 1ᵉʳ paiement d'un nouvel achat ou les renouvellements selon leur réglage : pour une remise de rétention sur un abonnement existant, **valider le mécanisme exact dans la doc de la plateforme**.
+## 5. Freemius : natif vs à bâtir
+- **[source primaire]** Natif : **Cancellation Survey** (Customer Portal), raisons prédéfinies + « Other » libre, exposée via events/webhooks/API/email transactionnel. Plus « License Retention Guidance » (dialog Retain vs cancel) — **guidance, pas offre**.
+- **À bâtir (couche maison)** : la logique « raison → offre matchée » (pause/downgrade/coupon présentés selon la raison) n'est **pas** fournie. Implémentation : webhook/feedback capte la raison → UI custom présente l'offre (coupon/pause via API Freemius) **avant** l'appel d'annulation. Les coupons existent comme feature séparée (« First payment only » vs « renewals ») — pour une remise de rétention sur un abonnement existant, **valider le mécanisme exact côté `freemius`** (cf. `freemius/reference/billing-mechanics.md` §4).
 
 ## 6. Sources
 - Paddle Retain — `https://developer.paddle.com/concepts/retain/cancellation-flows-surveys/`
@@ -52,3 +52,4 @@
 - Amazon retention offers (plafond 1/12 mois) — `https://developer.amazon.com/docs/reports-promo/retention-offers.html`
 - FTC rule vacatée — `https://www.cooley.com/news/insight/2025/2025-07-11-click-to-cancel-just-got-cancelled-eighth-circuit-vacates-entirety-of-ftcs-negative-option-rule`
 - DSA dark patterns — `https://cbtw.tech/insights/illegal-dark-patterns-europe`
+- Freemius Cancellation Survey — `https://freemius.com/help/documentation/users-account-management/cancellation-survey/`

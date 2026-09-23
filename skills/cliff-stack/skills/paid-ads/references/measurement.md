@@ -6,7 +6,7 @@ Le paid est un **accélérateur, pas un générateur** : il amplifie une proposi
 - CPC qui mange la marge,
 - attribution cassée empêchant d'optimiser.
 
-**Déconseiller le paid quand** : pas d'ICP clair (CAC ×5) · LTV faible · < 30 conv/mois · proposition non validée organiquement · dépendance à un seul canal payant comme amorçage. Tant que la traction n'existe pas en organique, le paid brûle un budget modeste sans signal exploitable. Pour ce profil, **[[seo-launch]], contenu, communauté, wordpress.org, programme d'affiliation** ont un LTV:CAC structurellement meilleur.
+**Déconseiller le paid quand** : pas d'ICP clair (CAC ×5) · LTV faible · < 30 conv/mois · proposition non validée organiquement · dépendance à un seul canal payant comme amorçage. Tant que la traction n'existe pas en organique, le paid brûle un budget modeste sans signal exploitable. Pour ce profil, **[[seo-launch]], contenu, communauté, wordpress.org, affiliation [[freemius]]** ont un LTV:CAC structurellement meilleur.
 
 ## Mini-formule du gate (rendre le « oui/non » mécanique)
 Estimer le CAC paid AVANT de décider, en back-of-envelope :
@@ -23,7 +23,7 @@ CAC paid          ≈ budget mensuel ÷ conversions/mois
 ## Unit economics (raisonner ici, pas en last-click)
 - **LTV:CAC ≥ 3:1** (SMB SaaS parfois 2,5:1) ; minimum d'efficacité.
 - **CAC payback < 12 mois** (médian SaaS ~6,8 mois, B2B ~8,6).
-- Remonter les **conversions hors-ligne** (ventes réelles de la plateforme de facturation → import offline / CRM) pour réaligner l'algo sur le **revenu réel**, pas les form-fills.
+- Remonter les **conversions hors-ligne** (vente Freemius/EDD/Stripe → import offline / CRM) pour réaligner l'algo sur le **revenu réel**, pas les form-fills.
 
 ## Attribution post-cookieless / iOS14
 - **On rate 60-70 % des users.** Le last-click « était déjà mauvais en B2B, il est désormais activement trompeur ».
