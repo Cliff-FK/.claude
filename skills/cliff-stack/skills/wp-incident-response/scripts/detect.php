@@ -16,9 +16,6 @@
  */
 
 const WD_VERSION = '1.0.0';
-// Mode HTTP (dépôt temporaire) : renseigner les deux constantes avant l'envoi, sinon refus.
-const WD_HTTP_TOKEN   = '';
-const WD_HTTP_EXPIRES = 0;
 
 const WD_CONF  = 'CONFIRMÉ';
 const WD_PISTE = 'PISTE';
@@ -35,7 +32,9 @@ const WD_UPDATE_HOOKS = '/^(auto_update_(core|plugin|theme|translation)|automati
 const WD_UPDATE_CONSTS = [ 'AUTOMATIC_UPDATER_DISABLED', 'WP_AUTO_UPDATE_CORE', 'DISALLOW_FILE_MODS', 'FS_METHOD', 'WP_HTTP_BLOCK_EXTERNAL', 'DISALLOW_FILE_EDIT', 'WP_ACCESSIBLE_HOSTS' ];
 const WD_SENSITIVE_OPTIONS = [ 'siteurl', 'home', 'active_plugins', 'users_can_register', 'default_role', 'template', 'stylesheet', 'admin_email', 'upload_path', 'upload_url_path' ];
 const WD_RESERVED_DOMAIN = '/(^|\.)(test|example|invalid|localhost|local)$|^example\.(com|net|org)$/i';
-const WD_PHP_EXT = '/\.(php\d?|phtml|pht|phar|phps|inc|module)$/i';
+// Dossiers de fichiers déposés ou de médias, désignés par leur nom générique : un projet PHP n'y attend pas de code.
+const WD_DATA_DIRS = '#(^|/)(uploads?|medias?|images?|img|photos?|pictures|files|fichiers|documents?|downloads?)/#';
+const WD_PHP_EXT ='/\.(php\d?|phtml|pht|phar|phps|inc|module)$/i';
 const WD_CRAWLER_UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
 const WD_BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const WD_SEARCH_REFERER = 'https://www.google.com/';
@@ -1519,11 +1518,19 @@ function wd_http( WdReport $R, string $url, array $headers = [], int $timeout = 
 	}
 	$ctx = stream_context_create( [ 'http' => [ 'timeout' => $timeout, 'ignore_errors' => true, 'follow_location' => 0, 'protocol_version' => 1.1, 'header' => implode( "\r\n", array_merge( [ 'Connection: close' ], $headers ) ), 'user_agent' => $ua ] ] );
 	$warn = [];
-	$body = wd_probe( fn() => file_get_contents( $url, false, $ctx ), $warn );
+	$hdrs = [];
+	// $http_response_header n'existe que dans la portée de l'appel : on le remonte explicitement.
+	$body = wd_probe(
+		function () use ( $url, $ctx, &$hdrs ) {
+			$b    = file_get_contents( $url, false, $ctx );
+			$hdrs = $http_response_header ?? [];
+			return $b;
+		},
+		$warn
+	);
 	if ( ! is_string( $body ) ) {
 		return [ 0, '', [], 'flux : ' . implode( ' ; ', $warn ) ];
 	}
-	$hdrs = isset( $http_response_header ) ? $http_response_header : [];
 	$code = ( $hdrs && preg_match( '#HTTP/\S+\s+(\d{3})#', $hdrs[0], $m ) ) ? (int) $m[1] : 0;
 	return [ $code, $body, wd_parse_headers( implode( "\r\n", $hdrs ) ), '' ];
 }
@@ -1564,7 +1571,8 @@ function wd_htaccess( WdReport $R, string $rel, string $content, array $ctx ): v
 	$marker  = null;
 	$unexplained = [];
 	$wpStd = '/^(RewriteEngine On|RewriteBase \/.*|RewriteRule \^index\\\\\.php\$ - \[L\]|RewriteCond %\{REQUEST_FILENAME\} !-[fd]|RewriteRule \. \/?(.*\/)?index\.php \[L\]|RewriteRule \.\* - \[E=HTTP_AUTHORIZATION:%\{HTTP:Authorization\}\]|<\/?IfModule[^>]*>)$/i';
-	$conds = [];
+	$conds     = [];
+	$condStart = null;
 	foreach ( $lines as $no => $raw ) {
 		$l = trim( $raw );
 		if ( preg_match( '/^#\s*BEGIN\s+(.+)$/i', $l, $m ) ) {
@@ -1588,8 +1596,9 @@ function wd_htaccess( WdReport $R, string $rel, string $content, array $ctx ): v
 			continue;
 		}
 		if ( $cur !== null && preg_match( '/^<\/(FilesMatch|Files)>/i', $l ) ) {
-			$blocks[] = $cur;
-			$cur      = null;
+			$cur['end'] = $no + 1;
+			$blocks[]   = $cur;
+			$cur        = null;
 			continue;
 		}
 		if ( $cur !== null ) {
@@ -1606,11 +1615,14 @@ function wd_htaccess( WdReport $R, string $rel, string $content, array $ctx ): v
 		if ( preg_match( '/^(AddHandler|SetHandler|AddType|ForceType)\s+(\S+)(.*)$/i', $l, $m ) && preg_match( '/php|x-httpd|cgi-script/i', $m[2] ) ) {
 			$exts = strtolower( $m[3] );
 			if ( preg_match( '/\.(jpe?g|png|gif|ico|txt|svg|webp|bmp|css|js|log|zip|pdf)\b/', $exts ) || ( strtolower( $m[1] ) === 'sethandler' && $cur !== null && ! preg_match( '/php/i', $cur['pat'] ) ) ) {
-				$R->add( WD_CONF, 'serveur.handler', $rel, 'Des fichiers non PHP sont exécutés comme du code', [ 'L' . ( $no + 1 ) . ' ' . $l ], 'Retirer cette directive (retrait chirurgical, sauvegarde avant).' );
+				$R->add( WD_CONF, 'serveur.handler', $rel, 'Des fichiers non PHP sont exécutés comme du code', [ 'L' . ( $no + 1 ) . ' ' . $l ], 'Retirer cette directive (retrait chirurgical, sauvegarde avant).', [ 'lignes' => [ [ $no + 1, $no + 1 ] ] ] );
 			}
 		}
 		if ( preg_match( '/^ErrorDocument\s+\d{3}\s+(\S+\.php\S*)/i', $l, $m ) && ! in_array( ltrim( basename( $m[1] ), '/' ), WD_CORE_ROOT_FILES, true ) ) {
-			$R->add( WD_PISTE, 'serveur.errordocument', $rel, 'Page d\'erreur servie par un script PHP non WordPress', [ 'L' . ( $no + 1 ) . ' ' . $l ] );
+			$R->add( WD_PISTE, 'serveur.errordocument', $rel, 'Page d\'erreur servie par un script PHP non WordPress', [ 'L' . ( $no + 1 ) . ' ' . $l ], '', [ 'lignes' => [ [ $no + 1, $no + 1 ] ] ] );
+		}
+		if ( preg_match( '/^RewriteCond\s/i', $l ) ) {
+			$condStart = $condStart ?? $no + 1;
 		}
 		if ( preg_match( '/^RewriteCond\s+%\{(HTTP_USER_AGENT|HTTP_REFERER|HTTP_ACCEPT_LANGUAGE|REMOTE_ADDR)\}/i', $l, $m ) ) {
 			$conds[] = strtoupper( $m[1] );
@@ -1619,23 +1631,27 @@ function wd_htaccess( WdReport $R, string $rel, string $content, array $ctx ): v
 			$target = $m[2];
 			if ( preg_match( '#^https?://#i', $target ) ) {
 				$st = array_intersect( $conds, [ 'HTTP_USER_AGENT', 'HTTP_REFERER', 'HTTP_ACCEPT_LANGUAGE' ] ) ? WD_CONF : WD_PISTE;
-				$R->add( $st, 'serveur.redirection', $rel, $st === WD_CONF ? 'Redirection externe conditionnée par le visiteur (cloaking)' : 'Redirection vers un domaine externe', [ 'L' . ( $no + 1 ) . ' ' . $l, 'conditions : ' . ( $conds ? implode( ', ', array_unique( $conds ) ) : 'aucune' ) ] );
+				$R->add( $st, 'serveur.redirection', $rel, $st === WD_CONF ? 'Redirection externe conditionnée par le visiteur (cloaking)' : 'Redirection vers un domaine externe', [ 'L' . ( $no + 1 ) . ' ' . $l, 'conditions : ' . ( $conds ? implode( ', ', array_unique( $conds ) ) : 'aucune' ) ], '', [ 'lignes' => [ [ $condStart ?? $no + 1, $no + 1 ] ] ] );
 			} elseif ( preg_match( '#([^\s?]+\.php)#i', $target, $tm ) && ! wd_rewrite_explained( $dir, $tm[1], $ctx ) ) {
-				$R->add( WD_PISTE, 'serveur.reecriture', $rel, 'Réécriture vers un script PHP qu\'aucun composant installé n\'explique', [ 'L' . ( $no + 1 ) . ' ' . $l ] );
+				$R->add( WD_PISTE, 'serveur.reecriture', $rel, 'Réécriture vers un script PHP qu\'aucun composant installé n\'explique', [ 'L' . ( $no + 1 ) . ' ' . $l ], '', [ 'lignes' => [ [ $condStart ?? $no + 1, $no + 1 ] ] ] );
 			}
-			$conds = [];
+			$conds     = [];
+			$condStart = null;
 		}
 	}
 	$probe = 'wd-sonde-' . substr( md5( $rel ), 0, 6 ) . '.php';
 	$denyPhp = false;
 	$allowNames = [];
+	$lockLines  = [];
 	foreach ( $blocks as $b ) {
 		$re = '~' . str_replace( '~', '\~', $b['pat'] ) . '~';
 		$matchesProbe = $b['type'] === 'filesmatch' ? (bool) wd_probe( fn() => preg_match( $re, $probe ) ) : false;
 		if ( $b['deny'] && $matchesProbe ) {
-			$denyPhp = true;
+			$denyPhp     = true;
+			$lockLines[] = [ $b['line'], $b['end'] ];
 		}
 		if ( $b['allow'] && ! $matchesProbe && preg_match_all( '/[A-Za-z0-9_.\\\\-]+\\\\?\.php/i', $b['pat'], $nm ) ) {
+			$lockLines[] = [ $b['line'], $b['end'] ];
 			foreach ( $nm[0] as $name ) {
 				$allowNames[] = str_replace( '\\', '', $name );
 			}
@@ -1650,13 +1666,13 @@ function wd_htaccess( WdReport $R, string $rel, string $content, array $ctx ): v
 			'Verrou .htaccess : tout PHP est interdit sauf une liste de noms' . ( $isRoot ? ' (bloque wp-admin, les mises à jour et tout nettoyage par script)' : '' ),
 			[ 'noms autorisés : ' . implode( ', ', array_unique( $allowNames ) ), 'noms étrangers à WordPress : ' . ( $foreign ? implode( ', ', $foreign ) : 'aucun' ) ],
 			'Retirer chirurgicalement les blocs FilesMatch concernés après sauvegarde ; chercher les fichiers de la liste et le processus qui réécrit ce fichier.',
-			[ 'noms_autorises' => array_values( array_unique( $allowNames ) ) ]
+			[ 'noms_autorises' => array_values( array_unique( $allowNames ) ), 'lignes' => $lockLines ]
 		);
 	} elseif ( $denyPhp && $isRoot ) {
 		$R->add( WD_PISTE, 'serveur.verrou', $rel, 'Le .htaccess racine interdit l\'exécution de PHP', [], 'Vérifier que wp-admin et les mises à jour fonctionnent.' );
 	}
 	if ( $unexplained ) {
-		$R->add( WD_PISTE, 'serveur.regle_non_expliquee', $rel, 'Règles serveur qu\'aucune référence n\'explique (ni bloc WordPress standard, ni bloc balisé d\'un composant installé)', array_slice( $unexplained, 0, 25 ), 'Faire confirmer chaque règle par le client ou la retirer chirurgicalement.' );
+		$R->add( wd_is_wp( $ctx ) ? WD_PISTE : WD_HUMAN, 'serveur.regle_non_expliquee', $rel, 'Règles serveur qu\'aucune référence n\'explique (ni bloc WordPress standard, ni bloc balisé d\'un composant installé)', array_slice( $unexplained, 0, 25 ), 'Faire confirmer chaque règle par le client ou la retirer chirurgicalement.', [ 'lignes' => array_map( fn( $u ) => [ (int) substr( $u, 1 ), (int) substr( $u, 1 ) ], $unexplained ) ] );
 	}
 }
 function wd_marker_explained( string $marker, array $ctx ): bool {
@@ -1693,7 +1709,7 @@ function wd_rewrite_explained( string $dir, string $target, array $ctx ): bool {
 function wd_prepend( WdReport $R, string $rel, int $line, string $what, string $target, array $ctx ): void {
 	$t   = trim( $target, '"\'' );
 	$bad = preg_match( '#^/(tmp|dev/shm|var/tmp)/|/uploads/|/\.[^/]+$|\.(ico|png|jpe?g|gif|txt|log|css|js)$#i', $t );
-	$R->add( $bad ? WD_CONF : WD_PISTE, 'serveur.prepend', $rel, 'Directive ' . $what . ' : un fichier est exécuté avant chaque script', [ 'L' . $line . ' ' . $what . ' = ' . $t ], 'Lire le fichier ciblé, retirer la directive si elle n\'est pas justifiée (pare-feu applicatif documenté).' );
+	$R->add( $bad ? WD_CONF : WD_PISTE, 'serveur.prepend', $rel, 'Directive ' . $what . ' : un fichier est exécuté avant chaque script', [ 'L' . $line . ' ' . $what . ' = ' . $t ], 'Lire le fichier ciblé, retirer la directive si elle n\'est pas justifiée (pare-feu applicatif documenté).', [ 'lignes' => [ [ $line, $line ] ] ] );
 }
 function wd_ini( WdReport $R, string $rel, string $content, array $ctx ): void {
 	foreach ( preg_split( '/\r?\n/', $content ) as $no => $l ) {
@@ -1856,6 +1872,9 @@ function wd_build_refs( WdReport $R, string $root, array &$ctx, array $opt ): Wd
 		} else {
 			$refs->baseline = $j['fichiers'];
 		}
+	}
+	if ( ! wd_is_wp( $ctx ) ) {
+		return $refs;
 	}
 	if ( ! empty( $opt['no-network'] ) ) {
 		$R->notDone( 'manifestes officiels (cœur, extensions)', 'réseau désactivé (--no-network) : sans référence, les fichiers ne peuvent pas être expliqués', WD_HUMAN );
@@ -2058,6 +2077,9 @@ function wd_rel( string $root, string $path ): string {
 /** Où l'architecture WordPress attend-elle du code exécutable ? */
 function wd_location( string $rel, array $ctx ): string {
 	$l = strtolower( $rel );
+	if ( ! wd_is_wp( $ctx ) ) {
+		return preg_match( WD_DATA_DIRS, $l ) ? 'donnees_projet' : 'projet';
+	}
 	if ( strpos( $l, '/' ) === false ) {
 		return in_array( $rel, $ctx['core_root_files'], true ) || $l === 'wp-config.php' ? 'coeur' : 'racine_non_wp';
 	}
@@ -2082,8 +2104,21 @@ function wd_location( string $rel, array $ctx ): string {
 	return 'hors_wp';
 }
 function wd_scan_root( WdReport $R, string $root, array $opt, array &$ctx ): void {
+	$scan = wd_scan_prepare( $R, $root, $opt, $ctx );
+	wd_scan_files( $R, $root, $opt, $ctx, $scan );
+	wd_scan_finish( $R, $root, $opt, $ctx, $scan );
+}
+/** Projet WordPress (cœur reconnu) ou projet PHP quelconque : l'architecture attendue en dépend. */
+function wd_project_type( string $root ): string {
+	return is_file( $root . '/wp-includes/version.php' ) ? 'wordpress' : 'php';
+}
+function wd_is_wp( array $ctx ): bool {
+	return ( $ctx['type'] ?? 'wordpress' ) === 'wordpress';
+}
+function wd_scan_prepare( WdReport $R, string $root, array $opt, array &$ctx ): array {
 	$R->at( 'racine ' . $root );
 	$ctx['root']            = $root;
+	$ctx['type']            = wd_project_type( $root );
 	$ctx['core_root_files'] = WD_CORE_ROOT_FILES;
 	$ctx['hooks']           = [];
 	$ctx['types']           = [];
@@ -2095,25 +2130,47 @@ function wd_scan_root( WdReport $R, string $root, array $opt, array &$ctx ): voi
 	$ver = is_file( $vp ) ? (string) wd_read( $R, $vp ) : '';
 	$ctx['wp_version'] = preg_match( '/\$wp_version\s*=\s*[\'"]([^\'"]+)/', $ver, $m ) ? $m[1] : '';
 	$ctx['locale']     = preg_match( '/\$wp_local_package\s*=\s*[\'"]([^\'"]+)/', $ver, $m ) ? $m[1] : '';
-	$ctx['config']     = wd_parse_config( $R, $root );
-	$ctx['components'] = wd_components( $R, $root );
-	$R->contexte['racines'][ $root ] = [ 'wordpress' => $ctx['wp_version'] ?: '?', 'langue' => $ctx['locale'] ?: 'en_US (par défaut)', 'prefixe' => $ctx['config']['prefix'], 'wp_config' => $ctx['config']['path'] ];
+	if ( wd_is_wp( $ctx ) ) {
+		$ctx['config']     = wd_parse_config( $R, $root );
+		$ctx['components'] = wd_components( $R, $root );
+	} else {
+		$ctx['config']     = [ 'path' => '', 'consts' => [], 'prefix' => null, 'db' => [] ];
+		$ctx['components'] = [];
+		$R->add( WD_HUMAN, 'projet.non_wordpress', '.', 'Projet PHP sans cœur WordPress : l\'architecture attendue, l\'intégrité par provenance et la base ne sont pas vérifiables sans référence', [], 'Fournir une copie saine ou le dépôt du projet à la même version (--ref=CHEMIN) ; exporter la base à part si elle doit être relue.' );
+	}
+	$R->contexte['racines'][ $root ] = [ 'type' => $ctx['type'], 'wordpress' => $ctx['wp_version'] ?: '?', 'langue' => $ctx['locale'] ?: 'en_US (par défaut)', 'prefixe' => $ctx['config']['prefix'], 'wp_config' => $ctx['config']['path'] ];
 	$refs = wd_build_refs( $R, $root, $ctx, $opt );
-	wd_config_checks( $R, $ctx );
-
+	if ( wd_is_wp( $ctx ) ) {
+		wd_config_checks( $R, $ctx );
+	}
 	$files = wd_walk( $R, $root, $ctx );
 	$R->stats['fichiers'] = ( $R->stats['fichiers'] ?? 0 ) + count( $files );
 	$offset = (int) ( $opt['offset'] ?? 0 );
+	return [ 'refs' => $refs, 'files' => $files, 'offset' => $offset, 'fi' => $offset, 'start' => null, 'byComponent' => [], 'pluginMd5' => null, 'inventory' => [], 'execCount' => 0 ];
+}
+/**
+ * Analyse les fichiers à partir de $scan['fi']. Rend false quand l'échéance $deadline (reprise dans une
+ * requête suivante) est atteinte ; --max-seconds, lui, clôt l'analyse comme incomplète.
+ */
+function wd_scan_files( WdReport $R, string $root, array $opt, array &$ctx, array &$scan, float $deadline = 0.0 ): bool {
+	$R->at( 'racine ' . $root );
+	$files  = $scan['files'];
+	$refs   = $scan['refs'];
 	$budget = (int) ( $opt['max-seconds'] ?? 0 );
-	$start  = microtime( true );
+	$scan['start'] = $scan['start'] ?? microtime( true );
+	$start  = $scan['start'];
 	$maxPhp = (int) ( $opt['max-file-size'] ?? 8388608 );
-	$byComponent = [];
-	$pluginMd5 = null;
-	$inventory = [];
+	$byComponent = &$scan['byComponent'];
+	$pluginMd5   = &$scan['pluginMd5'];
+	$inventory   = &$scan['inventory'];
+	$execCount   = &$scan['execCount'];
 	$wantInv   = ! empty( $opt['inventory-out'] );
-	$execCount = 0;
 	$total     = count( $files );
-	for ( $fi = $offset; $fi < $total; $fi++ ) {
+	for ( $fi = $scan['fi']; $fi < $total; $fi++ ) {
+		$scan['fi'] = $fi;
+		if ( $deadline > 0 && microtime( true ) > $deadline ) {
+			return false;
+		}
 		if ( $budget > 0 && microtime( true ) - $start > $budget ) {
 			$R->incomplet[] = [ 'racine' => $root, 'offset_suivant' => $fi, 'total' => $total ];
 			$R->add( WD_HUMAN, 'analyse.incomplete', $root, 'Analyse des fichiers interrompue par le budget de temps : relancer avec --offset=' . $fi, [ $fi . ' / ' . $total . ' fichiers traités' ] );
@@ -2209,16 +2266,24 @@ function wd_scan_root( WdReport $R, string $root, array $opt, array &$ctx ): voi
 			}
 		}
 	}
+	$scan['fi'] = $total;
+	return true;
+}
+function wd_scan_finish( WdReport $R, string $root, array $opt, array &$ctx, array $scan ): void {
+	$R->at( 'racine ' . $root );
 	// Complet seulement si tout a été lu : ni budget dépassé, ni tranche sautée (--offset).
-	$ctx['code_complete'] = ! $R->incomplet && $offset === 0;
-	$R->stats['fichiers_executables'] = ( $R->stats['fichiers_executables'] ?? 0 ) + $execCount;
-	foreach ( $byComponent as $comp => $count ) {
+	$ctx['code_complete'] = ! $R->incomplet && $scan['offset'] === 0;
+	$R->stats['fichiers_executables'] = ( $R->stats['fichiers_executables'] ?? 0 ) + $scan['execCount'];
+	if ( ! wd_is_wp( $ctx ) && $scan['byComponent'] ) {
+		$R->add( WD_HUMAN, 'integrite.sans_reference', '.', 'Aucune référence de confiance pour ce projet : ' . array_sum( $scan['byComponent'] ) . ' fichier(s) exécutable(s) non expliqué(s)', array_slice( array_map( fn( $d, $n ) => $d . ' : ' . $n, array_keys( $scan['byComponent'] ), $scan['byComponent'] ), 0, 30 ), 'Fournir une copie saine ou le dépôt du projet à la même version via --ref=CHEMIN ; sans elle, statut NEEDS_HUMAN.' );
+	}
+	foreach ( wd_is_wp( $ctx ) ? $scan['byComponent'] : [] as $comp => $count ) {
 		if ( in_array( $comp, [ 'coeur', 'racine' ], true ) ) {
 			continue;
 		}
 		$R->add( WD_HUMAN, 'integrite.sans_reference', $comp, 'Aucune référence de confiance pour ce composant : ' . $count . ' fichier(s) exécutable(s) non expliqué(s)', [], 'Fournir une copie de la MÊME version (compte éditeur ou sauvegarde saine) via --ref=' . $comp . '=CHEMIN ; sans elle, statut NEEDS_HUMAN.' );
 	}
-	if ( ! empty( $ctx['root_misc'] ) ) {
+	if ( ! empty( $ctx['root_misc'] ) && wd_is_wp( $ctx ) ) {
 		$R->add( WD_DURC, 'racine.fichiers_non_wp', '.', 'Fichiers non WordPress à la racine servie', array_slice( $ctx['root_misc'], 0, 30 ), 'Identifier chacun, sortir du docroot ce qui n\'est pas servi volontairement.' );
 	}
 	$mu = glob( $root . '/wp-content/mu-plugins/*' ) ?: [];
@@ -2238,8 +2303,8 @@ function wd_scan_root( WdReport $R, string $root, array $opt, array &$ctx ): voi
 		$age = time() - (int) filemtime( $root . '/.maintenance' );
 		$R->add( WD_PISTE, 'maj.maintenance', '.maintenance', 'Fichier de maintenance présent : bloque le site et les mises à jour', [ 'âge apparent ' . round( $age / 60 ) . ' min (mtime non fiable)' ], 'Supprimer s\'il n\'y a pas de mise à jour en cours.' );
 	}
-	if ( $wantInv ) {
-		$ctx['inventory'] = $inventory;
+	if ( ! empty( $opt['inventory-out'] ) ) {
+		$ctx['inventory'] = $scan['inventory'];
 	}
 	$R->done( 'analyse des fichiers ' . $root );
 }
@@ -2280,7 +2345,7 @@ function wd_file_findings( WdReport $R, string $rel, string $loc, string $state,
 	foreach ( array_slice( $urls, 0, 5 ) as $u ) {
 		$preuves[] = 'adresse décodée : ' . $u;
 	}
-	if ( $rel === 'index.php' && ! $P->empty && wd_index_violation( $content ) ) {
+	if ( $rel === 'index.php' && wd_is_wp( $ctx ) && ! $P->empty && wd_index_violation( $content ) ) {
 		$conf      = true;
 		$preuves[] = 'index.php racine : du code s\'ajoute au chargeur standard (define + require de wp-blog-header.php)';
 	}
@@ -2330,6 +2395,7 @@ function wd_file_findings( WdReport $R, string $rel, string $loc, string $state,
 		'wpcontent_racine' => 'Code exécutable à la racine de wp-content hors drop-in',
 		'langues'          => 'Code exécutable dans les traductions (attendu : données pures)',
 		'hors_wp'          => 'Code exécutable hors de l\'arborescence WordPress',
+		'donnees_projet'   => 'Code exécutable dans un dossier de fichiers déposés ou de médias',
 	];
 	if ( isset( $unexpected[ $loc ] ) && ! $P->empty && ! ( $loc !== 'racine_non_wp' && $loc !== 'hors_wp' && $P->pureData ) && ! $explainedCopy ) {
 		$ctx['flagged'][ $rel ] = $ctx['flagged'][ $rel ] ?? WD_PISTE;
@@ -2690,6 +2756,7 @@ final class WdDb {
 			}
 			$res = wd_value( $v );
 			$id  = $table . '#' . ( $row[ $pkCol ] ?? '?' ) . ':' . $col;
+			$ref = [ 'ligne' => [ 'table' => $table, 'cle' => $pkCol, 'valeur' => (string) ( $row[ $pkCol ] ?? '' ), 'colonne' => $col ] ];
 			$date = '';
 			foreach ( [ 'modified', 'post_modified', 'post_date', 'created', 'created_at' ] as $dc ) {
 				if ( isset( $row[ $dc ] ) && preg_match( '/^\d{4}-/', (string) $row[ $dc ] ) ) {
@@ -2709,20 +2776,20 @@ final class WdDb {
 				$this->codeStores[ $store ]['ids'][]  = (string) ( $row[ $pkCol ] ?? '?' );
 			}
 			if ( $conf ) {
-				$this->R->add( WD_CONF, 'base.code_execute', $id, 'Code stocké en base qui exécute une entrée non fiable ou décodée', array_merge( $pr, $date ? [ 'date de la ligne : ' . $date ] : [], array_map( fn( $d ) => 'décodé : ' . $d['apercu'], array_slice( $res['decoded'], 0, 2 ) ) ), 'Neutraliser la ligne (désactiver puis supprimer) APRÈS avoir fermé le vecteur et tué les processus persistants.' );
+				$this->R->add( WD_CONF, 'base.code_execute', $id, 'Code stocké en base qui exécute une entrée non fiable ou décodée', array_merge( $pr, $date ? [ 'date de la ligne : ' . $date ] : [], array_map( fn( $d ) => 'décodé : ' . $d['apercu'], array_slice( $res['decoded'], 0, 2 ) ) ), 'Neutraliser la ligne (désactiver puis supprimer) APRÈS avoir fermé le vecteur et tué les processus persistants.', $ref );
 				if ( $date ) {
 					$this->evidenceDates[] = [ $date, $id ];
 					$this->R->event( $date, 'code_en_base', $id, true );
 				}
 			} elseif ( $res['flows'] && $kind !== 'transient' ) {
-				$this->R->add( WD_PISTE, 'base.code_capacite', $id, 'Code stocké en base avec une capacité sensible', $pr );
+				$this->R->add( WD_PISTE, 'base.code_capacite', $id, 'Code stocké en base avec une capacité sensible', $pr, '', $ref );
 			}
 			foreach ( $res['markup'] as [ $what, $host, $detail, $ilvl ] ) {
-				$this->markupHits[] = [ $id, $what, $host, $detail, $ilvl, $kind, $date ];
+				$this->markupHits[] = [ $id, $what, $host, $detail, $ilvl, $kind, $date, $ref ];
 			}
 			foreach ( $res['decoded'] as $d ) {
 				if ( ! empty( $d['vocabulaire'] ) && ! $conf && $kind !== 'transient' ) {
-					$this->R->add( WD_PISTE, 'base.valeur_decodee', $id, 'Valeur encodée dont le contenu décodé parle d\'exécution', [ 'vocabulaire : ' . implode( ', ', $d['vocabulaire'] ), 'décodé (' . implode( '>', $d['schemas'] ) . ') : ' . $d['apercu'] ], 'Identifier l\'extension qui écrit cette valeur ; un journal d\'agent distant ou une file de commandes révèle des tentatives.' );
+					$this->R->add( WD_PISTE, 'base.valeur_decodee', $id, 'Valeur encodée dont le contenu décodé parle d\'exécution', [ 'vocabulaire : ' . implode( ', ', $d['vocabulaire'] ), 'décodé (' . implode( '>', $d['schemas'] ) . ') : ' . $d['apercu'] ], 'Identifier l\'extension qui écrit cette valeur ; un journal d\'agent distant ou une file de commandes révèle des tentatives.', $ref );
 				}
 			}
 		}
@@ -2854,7 +2921,7 @@ final class WdDb {
 				$R->add( WD_PISTE, 'comptes.reinitialisation', 'user#' . $u['id'], 'Réinitialisation de mot de passe en cours sur un administrateur', [ $u['login'] ] );
 			}
 			if ( isset( $this->apppw[ $u['id'] ] ) ) {
-				$R->add( isset( $suspects[ $u['id'] ] ) ? WD_CONF : WD_HUMAN, 'comptes.mot_de_passe_application', 'user#' . $u['id'], 'Mots de passe d\'application (survivent au changement de mot de passe)', array_merge( [ $u['login'] ], $this->apppw[ $u['id'] ] ), 'Révoquer tous ceux que le client ne reconnaît pas.' );
+				$R->add( isset( $suspects[ $u['id'] ] ) ? WD_CONF : WD_HUMAN, 'comptes.mot_de_passe_application', 'user#' . $u['id'], 'Mots de passe d\'application (survivent au changement de mot de passe)', array_merge( [ $u['login'] ], $this->apppw[ $u['id'] ] ), 'Révoquer tous ceux que le client ne reconnaît pas.', [ 'ids' => [ $u['id'] ] ] );
 			}
 		}
 		$conf  = array_filter( $suspects, fn( $s ) => $s['statut'] === WD_CONF );
@@ -2926,21 +2993,21 @@ final class WdDb {
 				}
 			}
 			if ( isset( $suspects[ $author ] ) ) {
-				$byAuthor[] = '#' . $id . ' ' . $type . '/' . $status . ' « ' . $title . ' » /' . $name . '/';
+				$byAuthor[ $id ] = '#' . $id . ' ' . $type . '/' . $status . ' « ' . $title . ' » /' . $name . '/';
 				$R->event( $date, 'contenu_suspect', '#' . $id . ' ' . $type, true );
 			}
 			if ( $status === 'publish' && preg_match( '/hack(ed)?[\s_-]*by|owned[\s_-]*by|defaced|pwned/i', $title . ' ' . $name ) ) {
-				$deface[] = '#' . $id . ' ' . $type . ' « ' . $title . ' »';
+				$deface[ $id ] = '#' . $id . ' ' . $type . ' « ' . $title . ' »';
 			}
 			if ( in_array( $type, WD_CORE_POST_TYPES, true ) && ! in_array( $status, WD_CORE_STATUSES, true ) ) {
 				$statusOdd[ $type . '/' . $status ] = ( $statusOdd[ $type . '/' . $status ] ?? 0 ) + 1;
 			}
 		}
 		if ( $byAuthor ) {
-			$R->add( WD_CONF, 'contenus.auteur_suspect', $this->prefix . 'posts', count( $byAuthor ) . ' contenu(s) créés par des comptes suspects', array_slice( $byAuthor, 0, 30 ), 'Supprimer après validation (défacement, pages de spam) et purger les caches.' );
+			$R->add( WD_CONF, 'contenus.auteur_suspect', $this->prefix . 'posts', count( $byAuthor ) . ' contenu(s) créés par des comptes suspects', array_slice( array_values( $byAuthor ), 0, 30 ), 'Supprimer après validation (défacement, pages de spam) et purger les caches.', [ 'ids' => array_keys( $byAuthor ) ] );
 		}
 		if ( $deface ) {
-			$R->add( WD_CONF, 'contenus.defacement', $this->prefix . 'posts', 'Contenu public de défacement (titre explicite, même sans script)', array_slice( $deface, 0, 30 ) );
+			$R->add( WD_CONF, 'contenus.defacement', $this->prefix . 'posts', 'Contenu public de défacement (titre explicite, même sans script)', array_slice( array_values( $deface ), 0, 30 ), '', [ 'ids' => array_keys( $deface ) ] );
 		}
 		foreach ( $statusOdd as $k => $count ) {
 			$R->add( WD_PISTE, 'contenus.statut_anormal', $this->prefix . 'posts', 'Statut que le cœur ne définit pas : ' . $k, [ $count . ' ligne(s)' ] );
@@ -3039,7 +3106,7 @@ final class WdDb {
 			}
 		}
 		if ( $orphans ) {
-			$this->R->add( $complete ? WD_PISTE : WD_HUMAN, 'base.table_non_expliquee', $this->prefix . '*', count( $orphans ) . ' table(s) qu\'aucun code installé ne référence', $orphans, $complete ? 'Reste d\'une extension supprimée ou table posée par un tiers : identifier avant toute purge.' : 'Code du site non analysé : relancer avec --root pour expliquer ces tables.', [ 'tables' => $orphans ] );
+			$this->R->add( $complete ? WD_PISTE : WD_HUMAN, 'base.table_non_expliquee', $this->prefix . '*', count( $orphans ) . ' table(s) qu\'aucun code installé ne référence', $orphans, $complete ? 'Reste d\'une extension supprimée ou table posée par un tiers : identifier avant toute purge.' : 'Code du site non analysé : relancer avec --root pour expliquer ces tables.', [ 'tables' => $orphans, 'noms' => array_map( fn( $o ) => substr( $o, 0, (int) strpos( $o, ' (' ) ), $orphans ) ] );
 		}
 		foreach ( $this->autoinc as $table => $ai ) {
 			if ( $ai && isset( $this->tablesSeen[ $table ] ) && $ai > 1000 && $this->tablesSeen[ $table ] * 20 < $ai ) {
@@ -3049,7 +3116,7 @@ final class WdDb {
 	}
 	private function checkMarkup( array $window ): void {
 		[ $since ] = $window;
-		foreach ( $this->markupHits as [ $id, $what, $host, $detail, $lvl, $kind, $date ] ) {
+		foreach ( $this->markupHits as [ $id, $what, $host, $detail, $lvl, $kind, $date, $ref ] ) {
 			$sameSite = $host !== '' && $this->site !== '' && ( $host === $this->site || wd_ends( $host, '.' . $this->site ) );
 			if ( ( $what === 'script_externe' && ( $host === '' || $sameSite ) ) || ( $what === 'iframe_cachee' && $sameSite ) ) {
 				continue;
@@ -3062,7 +3129,7 @@ final class WdDb {
 				continue;
 			}
 			$st = $lvl === WD_CONF ? WD_CONF : WD_PISTE;
-			$this->R->add( $st, 'base.balisage_actif', $id, 'Balisage actif stocké en base (' . $what . ')', [ ( $host !== '' ? 'hôte : ' . $host . ' ; ' : '' ) . $detail ], 'Vérifier que le client l\'a ajouté ; sinon le retirer et purger les caches.' );
+			$this->R->add( $st, 'base.balisage_actif', $id, 'Balisage actif stocké en base (' . $what . ')', [ ( $host !== '' ? 'hôte : ' . $host . ' ; ' : '' ) . $detail ], 'Vérifier que le client l\'a ajouté ; sinon le retirer et purger les caches.', $ref );
 		}
 	}
 	private function checkOptions(): void {
@@ -3086,9 +3153,9 @@ final class WdDb {
 			foreach ( $ap as $p ) {
 				$p = (string) $p;
 				if ( wd_has( $p, '..' ) || wd_starts( $p, '/' ) || preg_match( '#^[a-z]:#i', $p ) ) {
-					$R->add( WD_CONF, 'base.extension_active', 'active_plugins', 'Extension active hors du dossier des extensions', [ $p ] );
+					$R->add( WD_CONF, 'base.extension_active', 'active_plugins', 'Extension active hors du dossier des extensions', [ $p ], '', [ 'extension' => $p ] );
 				} elseif ( $root !== '' && ! is_file( $root . '/wp-content/plugins/' . $p ) ) {
-					$R->add( WD_PISTE, 'base.extension_active', 'active_plugins', 'Extension déclarée active mais absente du disque', [ $p ] );
+					$R->add( WD_PISTE, 'base.extension_active', 'active_plugins', 'Extension déclarée active mais absente du disque', [ $p ], '', [ 'extension' => $p ] );
 				}
 			}
 			$R->contexte['extensions_actives'] = array_values( array_map( 'strval', $ap ) );
@@ -3109,7 +3176,7 @@ final class WdDb {
 		foreach ( [ 'core_updater.lock', 'auto_updater.lock' ] as $k ) {
 			if ( isset( $o[ $k ] ) ) {
 				$age = time() - (int) $o[ $k ];
-				$R->add( $age > 900 ? WD_PISTE : WD_HUMAN, 'maj.verrou', $k, 'Verrou de mise à jour présent en base', [ 'posé il y a ' . round( $age / 60 ) . ' min' ], 'Au-delà de 15 min sans mise à jour en cours, le supprimer débloque les mises à jour.' );
+				$R->add( $age > 900 ? WD_PISTE : WD_HUMAN, 'maj.verrou', $k, 'Verrou de mise à jour présent en base', [ 'posé il y a ' . round( $age / 60 ) . ' min' ], 'Au-delà de 15 min sans mise à jour en cours, le supprimer débloque les mises à jour.', [ 'ligne' => [ 'table' => $this->prefix . 'options', 'cle' => 'option_name', 'valeur' => $k, 'colonne' => 'option_value' ] ] );
 			}
 		}
 		$cron = wd_unserialize( $o['cron'] ?? '' );
@@ -3128,10 +3195,10 @@ final class WdDb {
 						$args = serialize( $call['args'] ?? [] );
 						$res  = wd_value( $args );
 						foreach ( $res['flows'] as $f ) {
-							$R->add( $f['niveau'], 'base.cron_code', 'cron:' . $hook, 'Tâche planifiée qui transporte du code', [ '[' . $f['capacite'] . '] ' . $f['detail'] ] );
+							$R->add( $f['niveau'], 'base.cron_code', 'cron:' . $hook, 'Tâche planifiée qui transporte du code', [ '[' . $f['capacite'] . '] ' . $f['detail'] ], '', [ 'hooks' => [ $hook ] ] );
 						}
 						if ( $res['decoded'] || $res['code'] ) {
-							$R->add( WD_PISTE, 'base.cron_code', 'cron:' . $hook, 'Arguments de tâche planifiée encodés ou exécutables', array_map( fn( $d ) => 'décodé : ' . $d['apercu'], $res['decoded'] ) );
+							$R->add( WD_PISTE, 'base.cron_code', 'cron:' . $hook, 'Arguments de tâche planifiée encodés ou exécutables', array_map( fn( $d ) => 'décodé : ' . $d['apercu'], $res['decoded'] ), '', [ 'hooks' => [ $hook ] ] );
 						}
 					}
 					if ( ! isset( $hooks[ $hook ] ) && ! isset( $lit[ $hook ] ) ) {
@@ -3140,7 +3207,7 @@ final class WdDb {
 				}
 			}
 			if ( $unexpl && $complete ) {
-				$R->add( WD_PISTE, 'base.cron_non_explique', 'cron', 'Tâches planifiées qu\'aucun code installé ne déclare', array_slice( array_keys( $unexpl ), 0, 40 ), 'Une tâche orpheline vient d\'une extension retirée ou d\'une persistance : identifier.' );
+				$R->add( WD_PISTE, 'base.cron_non_explique', 'cron', 'Tâches planifiées qu\'aucun code installé ne déclare', array_slice( array_keys( $unexpl ), 0, 40 ), 'Une tâche orpheline vient d\'une extension retirée ou d\'une persistance : identifier.', [ 'hooks' => array_map( 'strval', array_keys( $unexpl ) ) ] );
 			} elseif ( $unexpl ) {
 				$R->notDone( 'explication des tâches planifiées', 'code du site non analysé en entier (--root requis, sans budget dépassé)', WD_HUMAN );
 			}
@@ -3150,14 +3217,25 @@ final class WdDb {
 	}
 }
 
-function wd_db_phase( WdReport $R, array $opt, array $ctx ): void {
+/**
+ * Lit la base (dump ou MySQL en SELECT seul). $st porte la reprise : avec une échéance $deadline, la
+ * lecture s'arrête entre deux pages et rend false ; l'appel suivant reprend à la même table.
+ */
+function wd_db_phase( WdReport $R, array $opt, array $ctx, ?array &$st = null, float $deadline = 0.0 ): bool {
 	$R->at( 'base' );
+	if ( ! empty( $st['db'] ) ) {
+		return wd_db_read( $R, $opt, $ctx, $st, $deadline );
+	}
 	$prefix = $opt['prefix'] ?? ( $ctx['config']['prefix'] ?? null );
+	if ( empty( $opt['sql'] ) && ! empty( $ctx['root'] ) && ! wd_is_wp( $ctx ) ) {
+		$R->notDone( 'analyse de la base', 'projet non WordPress : schéma et identifiants inconnus, la base n\'est pas lue (l\'exporter et la faire relire)', WD_HUMAN );
+		return true;
+	}
 	if ( ! empty( $opt['sql'] ) ) {
 		$dump = new WdDump( $opt['sql'], $R );
 		if ( ! is_file( $opt['sql'] ) || ! $dump->prescan() ) {
 			$R->notDone( 'analyse de la base', 'dump illisible : ' . $opt['sql'] );
-			return;
+			return true;
 		}
 		$cands = [];
 		foreach ( $dump->creates as $t => $cols ) {
@@ -3171,11 +3249,11 @@ function wd_db_phase( WdReport $R, array $opt, array $ctx ): void {
 				$R->contexte['prefixe_deduit_du_dump'] = $prefix;
 			} else {
 				$R->notDone( 'analyse de la base', count( $cands ) ? 'plusieurs préfixes dans le dump (' . implode( ', ', $cands ) . ') : fournir --prefix' : 'aucune table d\'options dans le dump', count( $cands ) ? WD_HUMAN : WD_ILL );
-				return;
+				return true;
 			}
 		} elseif ( ! in_array( $prefix, $cands, true ) ) {
 			$R->notDone( 'analyse de la base', 'le préfixe « ' . $prefix . ' » n\'existe pas dans le dump (présents : ' . implode( ', ', $cands ) . ')' );
-			return;
+			return true;
 		}
 		$db = new WdDb( $R, $prefix, $ctx, $opt );
 		foreach ( $dump->creates as $t => $cols ) {
@@ -3184,22 +3262,43 @@ function wd_db_phase( WdReport $R, array $opt, array $ctx ): void {
 		$dump->scan( [ $db, 'row' ] );
 		$R->contexte['source_base'] = 'dump hors ligne ' . basename( $opt['sql'] );
 		$db->finish();
-		return;
+		return true;
 	}
 	if ( ! empty( $opt['no-db'] ) ) {
 		$R->notDone( 'analyse de la base', 'désactivée (--no-db)', WD_HUMAN );
-		return;
+		return true;
 	}
-	if ( ! class_exists( 'mysqli' ) ) {
-		$R->notDone( 'analyse de la base', 'extension mysqli absente : exporter la base et relancer avec --sql=dump.sql' );
-		return;
-	}
-	$c = $ctx['config']['db'] ?? [];
-	if ( $prefix === null || empty( $c['DB_NAME'] ) ) {
+	if ( $prefix === null || empty( $ctx['config']['db']['DB_NAME'] ) ) {
 		$R->notDone( 'analyse de la base', 'identifiants ou préfixe introuvables dans wp-config.php' );
-		return;
+		return true;
 	}
-	$host = (string) $c['DB_HOST'];
+	[ $my, $why ] = wd_db_connect( $ctx );
+	if ( $my === null ) {
+		$R->notDone( 'analyse de la base', $why );
+		return true;
+	}
+	$db   = new WdDb( $R, $prefix, $ctx, $opt );
+	$like = str_replace( [ '\\', '_', '%' ], [ '\\\\', '\\_', '\\%' ], $prefix ) . '%';
+	$res  = $my->query( 'SHOW TABLE STATUS LIKE \'' . $my->real_escape_string( $like ) . '\'' );
+	if ( ! $res ) {
+		$R->notDone( 'analyse de la base', 'SHOW TABLE STATUS refusé : ' . $my->error );
+		return true;
+	}
+	$tables = [];
+	while ( $r = $res->fetch_assoc() ) {
+		$tables[ $r['Name'] ] = $r['Auto_increment'] !== null ? (int) $r['Auto_increment'] : null;
+	}
+	$res->free();
+	$st = [ 'db' => $db, 'tables' => $tables, 'ti' => 0, 'last' => null, 'my' => $my ];
+	return wd_db_read( $R, $opt, $ctx, $st, $deadline );
+}
+/** Connexion MySQL avec les identifiants lus dans wp-config.php : [mysqli|null, raison de l'échec]. */
+function wd_db_connect( array $ctx ): array {
+	if ( ! class_exists( 'mysqli' ) ) {
+		return [ null, 'extension mysqli absente : exporter la base et relancer avec --sql=dump.sql' ];
+	}
+	$c    = $ctx['config']['db'] ?? [];
+	$host = (string) ( $c['DB_HOST'] ?? '' );
 	$port = null;
 	$sock = null;
 	if ( preg_match( '/^(.*):(\d+)$/', $host, $m ) ) {
@@ -3210,44 +3309,94 @@ function wd_db_phase( WdReport $R, array $opt, array $ctx ): void {
 	mysqli_report( MYSQLI_REPORT_OFF );
 	$my = mysqli_init();
 	$my->options( MYSQLI_OPT_CONNECT_TIMEOUT, 10 );
-	$ok = wd_probe( fn() => $my->real_connect( $host, (string) $c['DB_USER'], (string) $c['DB_PASSWORD'], (string) $c['DB_NAME'], $port, $sock ), $warn );
+	$ok = wd_probe( fn() => $my->real_connect( $host, (string) ( $c['DB_USER'] ?? '' ), (string) ( $c['DB_PASSWORD'] ?? '' ), (string) ( $c['DB_NAME'] ?? '' ), $port, $sock ), $warn );
 	if ( ! $ok ) {
-		$R->notDone( 'analyse de la base', 'connexion MySQL refusée (' . ( $my->connect_error ?: implode( ' ; ', $warn ) ) . ')' );
-		return;
+		return [ null, 'connexion MySQL refusée (' . ( $my->connect_error ?: implode( ' ; ', $warn ) ) . ')' ];
 	}
 	$my->set_charset( 'utf8mb4' );
-	$db   = new WdDb( $R, $prefix, $ctx, $opt );
-	$like = str_replace( [ '\\', '_', '%' ], [ '\\\\', '\\_', '\\%' ], $prefix ) . '%';
-	$res  = $my->query( 'SHOW TABLE STATUS LIKE \'' . $my->real_escape_string( $like ) . '\'' );
-	if ( ! $res ) {
-		$R->notDone( 'analyse de la base', 'SHOW TABLE STATUS refusé : ' . $my->error );
-		return;
+	return [ $my, '' ];
+}
+function wd_sql_name( string $name ): string {
+	return '`' . str_replace( '`', '``', $name ) . '`';
+}
+/** Colonne de clé primaire simple d'une table, ou null (clé composée ou absente). */
+function wd_db_pk( mysqli $my, string $table ): ?string {
+	$q = $my->query( 'SHOW KEYS FROM ' . wd_sql_name( $table ) . ' WHERE Key_name = \'PRIMARY\'' );
+	$cols = [];
+	while ( $q && ( $r = $q->fetch_assoc() ) ) {
+		$cols[] = (string) $r['Column_name'];
 	}
-	$tables = [];
-	while ( $r = $res->fetch_assoc() ) {
-		$tables[ $r['Name'] ] = $r['Auto_increment'] !== null ? (int) $r['Auto_increment'] : null;
-	}
-	$res->free();
-	foreach ( $tables as $t => $ai ) {
-		$cr = $my->query( 'SHOW COLUMNS FROM `' . str_replace( '`', '``', $t ) . '`' );
-		$cols = [];
-		while ( $cr && ( $r = $cr->fetch_assoc() ) ) {
-			$cols[] = $r['Field'];
+	return count( $cols ) === 1 ? $cols[0] : null;
+}
+/** Lecture des tables ; avec échéance, par pages sur la clé primaire (reprise exacte, sans OFFSET). */
+function wd_db_read( WdReport $R, array $opt, array $ctx, array &$st, float $deadline ): bool {
+	$my = $st['my'] ?? null;
+	if ( ! $my instanceof mysqli ) {
+		[ $my, $why ] = wd_db_connect( $ctx );
+		if ( $my === null ) {
+			$R->notDone( 'analyse de la base', 'reconnexion impossible : ' . $why );
+			return true;
 		}
-		$db->create( $t, $cols, $ai );
-		$q = $my->query( 'SELECT * FROM `' . str_replace( '`', '``', $t ) . '`', MYSQLI_USE_RESULT );
-		if ( ! $q ) {
-			$R->add( WD_ILL, 'base.table_illisible', $t, 'Lecture refusée : ' . $my->error );
+	}
+	$db     = $st['db'];
+	$tables = array_keys( $st['tables'] );
+	for ( ; $st['ti'] < count( $tables ); $st['ti']++, $st['last'] = null ) {
+		$t = $tables[ $st['ti'] ];
+		if ( $deadline > 0 && microtime( true ) > $deadline ) {
+			$st['my'] = null;
+			$my->close();
+			return false;
+		}
+		if ( $st['last'] === null ) {
+			$cr = $my->query( 'SHOW COLUMNS FROM ' . wd_sql_name( $t ) );
+			$cols = [];
+			while ( $cr && ( $r = $cr->fetch_assoc() ) ) {
+				$cols[] = $r['Field'];
+			}
+			$db->create( $t, $cols, $st['tables'][ $t ] );
+		}
+		$pk = $deadline > 0 ? wd_db_pk( $my, $t ) : null;
+		if ( $pk === null ) {
+			$q = $my->query( 'SELECT * FROM ' . wd_sql_name( $t ), MYSQLI_USE_RESULT );
+			if ( ! $q ) {
+				$R->add( WD_ILL, 'base.table_illisible', $t, 'Lecture refusée : ' . $my->error );
+				continue;
+			}
+			while ( $r = $q->fetch_assoc() ) {
+				$db->row( $t, $r );
+			}
+			$q->free();
 			continue;
 		}
-		while ( $r = $q->fetch_assoc() ) {
-			$db->row( $t, $r );
+		while ( true ) {
+			if ( microtime( true ) > $deadline ) {
+				$st['my'] = null;
+				$my->close();
+				return false;
+			}
+			$where = $st['last'] === null ? '' : ' WHERE ' . wd_sql_name( $pk ) . ' > \'' . $my->real_escape_string( (string) $st['last'] ) . '\'';
+			$q = $my->query( 'SELECT * FROM ' . wd_sql_name( $t ) . $where . ' ORDER BY ' . wd_sql_name( $pk ) . ' LIMIT 2000' );
+			if ( ! $q ) {
+				$R->add( WD_ILL, 'base.table_illisible', $t, 'Lecture refusée : ' . $my->error );
+				break;
+			}
+			$n = 0;
+			while ( $r = $q->fetch_assoc() ) {
+				$db->row( $t, $r );
+				$st['last'] = $r[ $pk ];
+				$n++;
+			}
+			$q->free();
+			if ( $n < 2000 ) {
+				break;
+			}
 		}
-		$q->free();
 	}
 	$my->close();
+	$st['my'] = null;
 	$R->contexte['source_base'] = 'MySQL direct (lecture seule, SELECT uniquement)';
 	$db->finish();
+	return true;
 }
 
 // ============================================================ Mises à jour, système, site en ligne, journaux
@@ -3432,7 +3581,7 @@ function wd_system_phase( WdReport $R, array $opt, array $roots ): void {
 		$R->done( 'processus' );
 		foreach ( wd_ps_suspects( $rows, $info, getmypid(), $roots ) as $pid => $s ) {
 			$st = $s['forts'] ? WD_CONF : WD_PISTE;
-			$R->add( $st, 'systeme.processus', 'pid ' . $pid, $st === WD_CONF ? 'Processus persistant (signaux forts)' : 'Processus non expliqué', array_merge( [ 'ppid ' . $s['row']['ppid'] . ' ; âge ' . $s['row']['age'] . ' s (âge du processus, pas d\'une requête)', 'commande : ' . $s['row']['args'], 'cwd : ' . ( $s['cwd'] ?: 'illisible' ), 'exe : ' . ( $s['exe'] ?: 'illisible' ) ], $s['forts'], $s['faibles'] ), $st === WD_CONF ? 'Copier /proc/' . $pid . '/cmdline et environ, puis kill -9 ' . $pid . ' APRÈS confirmation humaine du PID, avant tout nettoyage.' : 'Identifier ce processus avant d\'agir.' );
+			$R->add( $st, 'systeme.processus', 'pid ' . $pid, $st === WD_CONF ? 'Processus persistant (signaux forts)' : 'Processus non expliqué', array_merge( [ 'ppid ' . $s['row']['ppid'] . ' ; âge ' . $s['row']['age'] . ' s (âge du processus, pas d\'une requête)', 'commande : ' . $s['row']['args'], 'cwd : ' . ( $s['cwd'] ?: 'illisible' ), 'exe : ' . ( $s['exe'] ?: 'illisible' ) ], $s['forts'], $s['faibles'] ), $st === WD_CONF ? 'Copier /proc/' . $pid . '/cmdline et environ, puis kill -9 ' . $pid . ' APRÈS confirmation humaine du PID, avant tout nettoyage.' : 'Identifier ce processus avant d\'agir.', [ 'pid' => $pid, 'commande' => $s['row']['args'] ] );
 		}
 	}
 	if ( wd_shell_ok() ) {
@@ -3669,13 +3818,13 @@ function wd_text_summary( array $doc ): string {
 	$o   = [];
 	$o[] = '== wp-incident-response / detect.php ' . $doc['version'] . ' (lecture seule, mode ' . $doc['mode'] . ') ==';
 	foreach ( $doc['contexte']['racines'] ?? [] as $root => $r ) {
-		$o[] = 'Racine : ' . $root . ' | WordPress ' . $r['wordpress'] . ' (' . $r['langue'] . ') | préfixe ' . ( $r['prefixe'] ?? '?' );
+		$o[] = 'Racine : ' . $root . ' | ' . ( ( $r['type'] ?? 'wordpress' ) === 'wordpress' ? 'WordPress ' . $r['wordpress'] . ' (' . $r['langue'] . ') | préfixe ' . ( $r['prefixe'] ?? '?' ) : 'projet PHP non WordPress' );
 	}
 	if ( isset( $doc['contexte']['source_base'] ) ) {
 		$o[] = 'Base : ' . $doc['contexte']['source_base'];
 	}
 	$f = $doc['contexte']['fenetre'] ?? null;
-	$o[] = 'Fenêtre d\'incident : ' . ( is_array( $f ) ? $f['debut'] . ' (' . $f['source'] . ')' : (string) $f );
+	$o[] = 'Fenêtre d\'incident : ' . ( is_array( $f ) ? $f['debut'] . ' (' . $f['source'] . ')' : ( $f ?? 'non déterminée (base non lue)' ) );
 	$o[] = 'Comptes par statut : ' . json_encode( $doc['comptes_par_statut'], JSON_UNESCAPED_UNICODE );
 	$cur = '';
 	foreach ( $doc['constats'] as $c ) {
@@ -3788,13 +3937,17 @@ function wd_guard( WdReport $R, string $phase, callable $fn ): void {
 	}
 }
 function wd_run( array $opt, string $mode ): array {
+	$S = wd_steps_init( $opt, $mode );
+	while ( ! wd_step( $S ) ) {
+	}
+	return wd_steps_result( $S );
+}
+/**
+ * Analyse découpée en phases rejouables. $S est sérialisable (aucune ressource entre deux appels) :
+ * un appelant contraint par max_execution_time appelle wd_step() avec une échéance et reprend plus tard.
+ */
+function wd_steps_init( array $opt, string $mode ): array {
 	$R = new WdReport();
-	set_error_handler(
-		function ( $no, $str, $file = '', $line = 0 ) use ( $R ) {
-			$R->error( $str . ' (detect.php:' . $line . ')' );
-			return true;
-		}
-	);
 	$R->contexte['mode_acces'] = $mode;
 	$disabled = trim( (string) ini_get( 'disable_functions' ) );
 	$R->contexte['environnement'] = [ 'open_basedir' => (string) ini_get( 'open_basedir' ) ?: 'aucun', 'fonctions_desactivees' => $disabled === '' ? 'aucune' : $disabled, 'max_execution_time' => ini_get( 'max_execution_time' ), 'extensions_manquantes' => array_values( array_filter( [ 'tokenizer', 'mysqli', 'curl', 'openssl', 'zip', 'zlib' ], fn( $e ) => ! extension_loaded( $e ) ) ) ];
@@ -3813,56 +3966,157 @@ function wd_run( array $opt, string $mode ): array {
 			$roots[] = wd_norm( $real );
 		}
 	}
-	$roots = array_values( array_unique( $roots ) );
-	$ctxMain = [ 'components' => [], 'config' => [ 'prefix' => null, 'db' => [] ], 'root' => '', 'wp_version' => '', 'locale' => '', 'hooks' => [], 'types' => [], 'literals' => [], 'flagged' => [], 'db_exec' => [] ];
-	$allFlagged = [];
-	$inventories = [];
-	foreach ( $roots as $ix => $root ) {
-		$ctx = $ctxMain;
-		// Capture par référence : ces phases enrichissent $ctx (composants, littéraux, code_complete).
-		wd_guard( $R, 'analyse des fichiers ' . $root, function () use ( $R, $root, $opt, &$ctx ) {
-			wd_scan_root( $R, $root, $opt, $ctx );
-		} );
-		$ctx['update_filters_by_file'] = [];
-		wd_guard( $R, 'localisation des filtres de mise à jour', function () use ( $R, $root, &$ctx ) {
-			wd_update_filters_locate( $R, $root, $ctx );
-		} );
-		wd_guard( $R, 'mises à jour', fn() => wd_updates_phase( $R, $opt, $ctx ) );
-		foreach ( $ctx['flagged'] as $rel => $st ) {
-			$allFlagged[ $rel ] = $st;
-		}
-		if ( isset( $ctx['inventory'] ) ) {
-			$inventories[ $root ] = $ctx['inventory'];
-		}
-		if ( $ix === 0 ) {
-			$ctxMain = $ctx;
-		} elseif ( empty( $opt['sql'] ) ) {
-			wd_guard( $R, 'base ' . $root, fn() => wd_db_phase( $R, $opt, $ctx ) );
-		}
+	$roots  = array_values( array_unique( $roots ) );
+	$phases = [];
+	foreach ( array_keys( $roots ) as $ix ) {
+		array_push( $phases, [ 'fichiers_preparer', $ix ], [ 'fichiers', $ix ], [ 'fichiers_terminer', $ix ] );
 	}
 	if ( ! $roots && empty( $opt['sql'] ) ) {
 		$R->notDone( 'analyse', 'ni --root, ni --scope, ni --sql fourni' );
 	}
 	if ( ! empty( $opt['sql'] ) || $roots ) {
-		wd_guard( $R, 'base', fn() => wd_db_phase( $R, $opt, $ctxMain ) );
+		$phases[] = [ 'base', 0 ];
 	}
 	if ( ! $roots ) {
 		$R->notDone( 'analyse des fichiers', 'aucune racine fournie : le code n\'est pas analysé, rien ne peut être « expliqué »', WD_HUMAN );
 	}
-	wd_guard( $R, 'système', fn() => wd_system_phase( $R, $opt, $roots ) );
-	wd_guard( $R, 'site en ligne', fn() => wd_live_phase( $R, $opt ) );
-	wd_guard( $R, 'journaux', fn() => wd_logs_phase( $R, $opt, $roots, $allFlagged ) );
-	wd_guard( $R, 'surveillance', fn() => wd_watch_phase( $R, $opt, $roots, $allFlagged ) );
-	wd_guard( $R, 'corrélation', fn() => wd_correlate( $R ) );
-	if ( ! empty( $opt['inventory-out'] ) ) {
-		wd_write_out( $R, (string) $opt['inventory-out'], json_encode( [ 'genere_le' => gmdate( 'c' ), 'fichiers' => count( $inventories ) === 1 ? reset( $inventories ) : $inventories ], JSON_UNESCAPED_SLASHES ), $roots );
+	foreach ( [ 'systeme', 'en_ligne', 'journaux', 'surveillance', 'correlation', 'inventaire' ] as $p ) {
+		$phases[] = [ $p, 0 ];
 	}
-	restore_error_handler();
-	return [ wd_output( $R, $opt, $mode ), $roots, $R ];
+	$ctx = [ 'components' => [], 'config' => [ 'prefix' => null, 'db' => [] ], 'root' => '', 'wp_version' => '', 'locale' => '', 'hooks' => [], 'types' => [], 'literals' => [], 'flagged' => [], 'db_exec' => [] ];
+	return [ 'opt' => $opt, 'mode' => $mode, 'R' => $R, 'roots' => $roots, 'phases' => $phases, 'pi' => 0, 'ctx' => $ctx, 'ctxMain' => $ctx, 'scan' => null, 'dbst' => null, 'allFlagged' => [], 'inventories' => [] ];
+}
+/** Exécute les phases jusqu'à la fin (true) ou jusqu'à l'échéance (false, reprise possible). */
+function wd_step( array &$S, float $deadline = 0.0 ): bool {
+	$R = $S['R'];
+	set_error_handler(
+		function ( $no, $str, $file = '', $line = 0 ) use ( $R ) {
+			$R->error( $str . ' (detect.php:' . $line . ')' );
+			return true;
+		}
+	);
+	try {
+		while ( $S['pi'] < count( $S['phases'] ) ) {
+			if ( $deadline > 0 && microtime( true ) > $deadline ) {
+				return false;
+			}
+			[ $ph, $ix ] = $S['phases'][ $S['pi'] ];
+			if ( ! wd_phase( $S, $ph, $ix, $deadline ) ) {
+				return false;
+			}
+			$S['pi']++;
+		}
+		return true;
+	} finally {
+		if ( isset( $S['dbst']['my'] ) ) {
+			$S['dbst']['my'] = null;
+		}
+		restore_error_handler();
+	}
+}
+function wd_phase( array &$S, string $ph, int $ix, float $deadline ): bool {
+	$R    = $S['R'];
+	$opt  = $S['opt'];
+	$root = $S['roots'][ $ix ] ?? '';
+	$done = true;
+	switch ( $ph ) {
+		case 'fichiers_preparer':
+			$S['ctx']  = $S['ctxMain'];
+			$S['scan'] = null;
+			wd_guard( $R, 'analyse des fichiers ' . $root, function () use ( &$S, $R, $root, $opt ) {
+				$S['scan'] = wd_scan_prepare( $R, $root, $opt, $S['ctx'] );
+			} );
+			break;
+		case 'fichiers':
+			if ( $S['scan'] !== null ) {
+				$ok = false;
+				wd_guard( $R, 'analyse des fichiers ' . $root, function () use ( &$S, &$done, &$ok, $R, $root, $opt, $deadline ) {
+					$done = wd_scan_files( $R, $root, $opt, $S['ctx'], $S['scan'], $deadline );
+					$ok   = true;
+				} );
+				if ( ! $ok ) {
+					// Analyse interrompue : le code n'est pas lu en entier, rien ne doit s'en déduire.
+					$S['scan'] = null;
+					$done      = true;
+				}
+			}
+			break;
+		case 'fichiers_terminer':
+			// Capture par référence : ces phases enrichissent le contexte (composants, littéraux, code_complete).
+			if ( $S['scan'] !== null ) {
+				wd_guard( $R, 'analyse des fichiers ' . $root, function () use ( &$S, $R, $root, $opt ) {
+					wd_scan_finish( $R, $root, $opt, $S['ctx'], $S['scan'] );
+				} );
+			}
+			$S['scan'] = null;
+			$S['ctx']['update_filters_by_file'] = [];
+			wd_guard( $R, 'localisation des filtres de mise à jour', function () use ( &$S, $R, $root ) {
+				wd_update_filters_locate( $R, $root, $S['ctx'] );
+			} );
+			$ctx = $S['ctx'];
+			wd_guard( $R, 'mises à jour', fn() => wd_updates_phase( $R, $opt, $ctx ) );
+			foreach ( $ctx['flagged'] as $rel => $st ) {
+				$S['allFlagged'][ $rel ] = $st;
+			}
+			if ( isset( $ctx['inventory'] ) ) {
+				$S['inventories'][ $root ] = $ctx['inventory'];
+			}
+			if ( $ix === 0 ) {
+				$S['ctxMain'] = $ctx;
+			} elseif ( empty( $opt['sql'] ) ) {
+				wd_guard( $R, 'base ' . $root, fn() => wd_db_phase( $R, $opt, $ctx ) );
+			}
+			break;
+		case 'base':
+			wd_guard( $R, 'base', function () use ( &$S, &$done, $R, $opt, $deadline ) {
+				$done = wd_db_phase( $R, $opt, $S['ctxMain'], $S['dbst'], $deadline );
+			} );
+			if ( $done ) {
+				$S['dbst'] = null;
+			}
+			break;
+		case 'systeme':
+			wd_guard( $R, 'système', fn() => wd_system_phase( $R, $opt, $S['roots'] ) );
+			break;
+		case 'en_ligne':
+			wd_guard( $R, 'site en ligne', fn() => wd_live_phase( $R, $opt ) );
+			break;
+		case 'journaux':
+			wd_guard( $R, 'journaux', fn() => wd_logs_phase( $R, $opt, $S['roots'], $S['allFlagged'] ) );
+			break;
+		case 'surveillance':
+			wd_guard( $R, 'surveillance', fn() => wd_watch_phase( $R, $opt, $S['roots'], $S['allFlagged'] ) );
+			break;
+		case 'correlation':
+			wd_guard( $R, 'corrélation', fn() => wd_correlate( $R ) );
+			break;
+		case 'inventaire':
+			if ( ! empty( $opt['inventory-out'] ) ) {
+				$inv = $S['inventories'];
+				wd_write_out( $R, (string) $opt['inventory-out'], json_encode( [ 'genere_le' => gmdate( 'c' ), 'fichiers' => count( $inv ) === 1 ? reset( $inv ) : $inv ], JSON_UNESCAPED_SLASHES ), $S['roots'] );
+			}
+			break;
+	}
+	return $done;
+}
+/** Avancement lisible : phase courante, fichiers ou tables lus. */
+function wd_steps_progress( array $S ): array {
+	[ $ph ] = $S['phases'][ $S['pi'] ] ?? [ 'terminee' ];
+	$p = [ 'phase' => $ph, 'etape' => $S['pi'], 'etapes' => count( $S['phases'] ) ];
+	if ( $ph === 'fichiers' && $S['scan'] !== null ) {
+		$p['fichiers'] = [ $S['scan']['fi'], count( $S['scan']['files'] ) ];
+	}
+	if ( $ph === 'base' && ! empty( $S['dbst']['tables'] ) ) {
+		$p['tables'] = [ $S['dbst']['ti'], count( $S['dbst']['tables'] ) ];
+	}
+	return $p;
+}
+function wd_steps_result( array $S ): array {
+	return [ wd_output( $S['R'], $S['opt'], $S['mode'] ), $S['roots'], $S['R'] ];
 }
 /** Localise les filtres de mise à jour par fichier (seconde passe légère, seulement si le code en contient). */
 function wd_update_filters_locate( WdReport $R, string $root, array &$ctx ): void {
-	if ( empty( $ctx['update_filters'] ) ) {
+	if ( empty( $ctx['update_filters'] ) || ! is_dir( $root . '/wp-content' ) ) {
 		return;
 	}
 	$want = [];
@@ -3931,59 +4185,16 @@ function wd_cli( array $argv ): int {
 	return isset( $doc['comptes_par_statut'][ WD_CONF ] ) ? 2 : 1;
 }
 
-function wd_http_entry(): void {
-	$self = __FILE__;
-	register_shutdown_function(
-		function () use ( $self ) {
-			if ( is_file( $self ) ) {
-				unlink( $self );
-			}
-		}
-	);
-	header( 'Content-Type: application/json; charset=utf-8' );
-	header( 'Cache-Control: no-store' );
-	header( 'X-Robots-Tag: noindex, nofollow' );
-	$given = (string) ( $_SERVER['HTTP_X_DETECT_TOKEN'] ?? ( $_POST['token'] ?? '' ) );
-	if ( strlen( WD_HTTP_TOKEN ) < 32 || WD_HTTP_EXPIRES <= 0 ) {
-		http_response_code( 403 );
-		echo '{"erreur":"jeton ou expiration non configurés dans le fichier : refus"}';
-		return;
-	}
-	if ( time() > WD_HTTP_EXPIRES ) {
-		http_response_code( 403 );
-		echo '{"erreur":"script expiré"}';
-		return;
-	}
-	if ( $_SERVER['REQUEST_METHOD'] !== 'POST' || ! hash_equals( WD_HTTP_TOKEN, $given ) ) {
-		http_response_code( 404 );
-		return;
-	}
-	$opt = [];
-	foreach ( [ 'since', 'legit-admins', 'url', 'offset', 'max-seconds', 'watch', 'prefix', 'access-log', 'no-network', 'no-db', 'scope' ] as $k ) {
-		if ( isset( $_POST[ $k ] ) && is_string( $_POST[ $k ] ) ) {
-			$opt[ $k ] = $_POST[ $k ];
-		}
-	}
-	$root = __DIR__;
-	while ( ! is_file( $root . '/wp-includes/version.php' ) && dirname( $root ) !== $root ) {
-		$root = dirname( $root );
-	}
-	$opt['root']        = isset( $_POST['root'] ) && is_string( $_POST['root'] ) ? $_POST['root'] : $root;
-	$opt['max-seconds'] = $opt['max-seconds'] ?? max( 5, (int) ini_get( 'max_execution_time' ) - 10 );
-	[ $doc ] = wd_run( $opt, 'http' );
-	$doc['auto_suppression'] = unlink( $self ) ? 'fait' : 'ÉCHEC : supprimer le script à la main';
-	echo json_encode( $doc, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR );
-}
-
 // Ligne de commande = pas de requête HTTP entrante (couvre cli, cli-server, cgi-fcgi lancé par une
-// tâche planifiée du panneau). Le mode HTTP durci n'est choisi que sur une vraie requête entrante.
+// tâche planifiée du panneau). Par le web, seul le fichier généré par build-drop.php répond (WD_EMBEDDED).
 $wd_is_http = isset( $_SERVER['REQUEST_METHOD'] ) || isset( $_SERVER['GATEWAY_INTERFACE'] ) && ! isset( $GLOBALS['argv'] );
-if ( ! $wd_is_http ) {
-	// Uniquement quand detect.php EST le script lancé (couvre php et php-cgi via une tâche du panneau) ;
-	// jamais quand il est inclus par un autre script (un outil qui réutilise ses fonctions).
-	if ( realpath( $_SERVER['SCRIPT_FILENAME'] ?? '' ) === __FILE__ ) {
+if ( ! defined( 'WD_EMBEDDED' ) ) {
+	if ( $wd_is_http ) {
+		http_response_code( 404 );
+		header( 'Cache-Control: no-store' );
+		header( 'X-Robots-Tag: noindex, nofollow' );
+	} elseif ( realpath( $_SERVER['SCRIPT_FILENAME'] ?? '' ) === __FILE__ ) {
+		// Uniquement quand detect.php EST le script lancé ; jamais quand un outil l'inclut pour ses fonctions.
 		exit( wd_cli( $GLOBALS['argv'] ?? [ 'detect.php' ] ) );
 	}
-} else {
-	wd_http_entry();
 }
