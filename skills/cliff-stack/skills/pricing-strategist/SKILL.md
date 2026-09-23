@@ -32,7 +32,7 @@ The skill recommends **a model and a range**. The human picks the number, owns t
 - You suspect your packaging has anti-patterns (decoy tier, feature dump, no upgrade trigger)
 
 **Do not use for:**
-- The Freemius billing/coupon/dunning wiring once a model is chosen → `freemius`
+- The billing/coupon/dunning wiring once a model is chosen → the project's billing platform (`freemius` when it is Freemius)
 - The behavioral framing layer of a chosen tier (charm/decoy/anchoring) → `marketing-psychology`
 - Writing the pricing-page copy itself → `copywriting-landing`
 - The in-editor free→pro upsell placement → `in-product-upgrade-prompts`
@@ -104,7 +104,7 @@ cd commercial/skills/pricing-strategist && python3 scripts/pricing_model_picker.
 
 ## Distinct from
 
-- **freemius** — implements the chosen model in the billing platform (plans, coupons, trials, dunning, multi-currency). Pricing-strategist decides the menu; freemius wires it.
+- **freemius** — when the project bills through Freemius, implements the chosen model there (plans, coupons, trials, dunning, multi-currency). Pricing-strategist decides the menu; the billing platform wires it.
 - **marketing-psychology** — supplies the buyer-behavior lens (charm/decoy/anchoring) applied to tiers that already exist. Pricing-strategist designs the tiers first.
 - **copywriting-landing** — writes the pricing-page message. Pricing-strategist sets the numbers and packaging the page then sells.
 - **in-product-upgrade-prompts** — the in-editor upsell moment for a free→pro plugin. Consumes the tier design as input.

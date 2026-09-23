@@ -1,13 +1,13 @@
 ---
 name: email-lifecycle
-description: "Conçoit les SÉQUENCES email lifecycle pour un SaaS / plugin WordPress freemium (éditeur solo/petite équipe) : welcome/onboarding vers le aha moment, activation, upgrade free→paid, trial-to-paid, nurturing, win-back/réactivation. Triggers comportementaux, segmentation par lifecycle stage, métriques fiables post-Apple-MPP, délivrabilité Gmail/Yahoo, conformité GDPR (marketing vs transactionnel), coordination avec le dunning du billing. À utiliser quand on demande une séquence/automation email, onboarding, nurturing, conversion d'essai, relance, réactivation, drip campaign, newsletter produit, ou une stratégie email pour convertir/retenir des utilisateurs d'un plugin/SaaS. Le dunning (relance de paiement échoué) reste géré côté Freemius — voir [[freemius]]. NOT l'upsell free→pro affiché DANS l'éditeur Gutenberg → in-product-upgrade-prompts ; ce skill ne couvre la conversion free→paid que PAR EMAIL."
+description: "Conçoit les SÉQUENCES email lifecycle pour un SaaS / plugin WordPress freemium (éditeur solo/petite équipe) : welcome/onboarding vers le aha moment, activation, upgrade free→paid, trial-to-paid, nurturing, win-back/réactivation. Triggers comportementaux, segmentation par lifecycle stage, métriques fiables post-Apple-MPP, délivrabilité Gmail/Yahoo, conformité GDPR (marketing vs transactionnel), coordination avec le dunning du billing. À utiliser quand on demande une séquence/automation email, onboarding, nurturing, conversion d'essai, relance, réactivation, drip campaign, newsletter produit, ou une stratégie email pour convertir/retenir des utilisateurs d'un plugin/SaaS. Le dunning (relance de paiement échoué) reste géré par la plateforme de facturation du projet (si Freemius : [[freemius]]). NOT l'upsell free→pro affiché DANS l'éditeur Gutenberg → in-product-upgrade-prompts ; ce skill ne couvre la conversion free→paid que PAR EMAIL."
 ---
 
 # email-lifecycle — séquences email pour SaaS / plugin freemium
 
 > **Langue : réponds toujours en français** (accents complets). Termes techniques (trigger, aha moment, lifecycle stage, MPP, DMARC…) inchangés.
 
-Concevoir les séquences email d'un freemium plugin/SaaS. Complémentaire : [[freemius]] (billing, trials, **dunning**), [[copywriting-landing]] (le copy des emails de conversion), [[pricing-strategist]]/[[marketing-psychology]] (offre & persuasion).
+Concevoir les séquences email d'un freemium plugin/SaaS. Complémentaire : la plateforme de facturation du projet (billing, trials, **dunning** ; [[freemius]] si c'est elle, à vérifier dans le projet, jamais à présumer), [[copywriting-landing]] (le copy des emails de conversion), [[pricing-strategist]]/[[marketing-psychology]] (offre & persuasion).
 
 > **RÈGLE NON NÉGOCIABLE — consentement marketing séparé.** Un téléchargeur du plugin gratuit n'est PAS un consentement marketing : le download fonde le **transactionnel** (licence, sécurité, mises à jour), pas le démarchage. Pour l'envoyer en séquence marketing en UE, il faut un **opt-in marketing dédié, non pré-coché, granulaire**. Sinon = violation GDPR (jusqu'à 20 M€ / 4 % CA). Détail : `references/legal-deliverability.md`.
 
@@ -15,17 +15,17 @@ Concevoir les séquences email d'un freemium plugin/SaaS. Complémentaire : [[fr
 
 ## 0. Avant d'agir
 1. **Découvrir** : modèle (freemium WP.org vs trial), l'outil d'envoi (ESP simple vs product-triggered type Userlist/Customer.io/Encharge), le **aha moment** du produit (première valeur concrète — ex. premier rendu réussi au front), l'état de l'authentification email (SPF/DKIM/DMARC).
-2. **D'où vient l'email ?** ⚠️ **wordpress.org ne transmet AUCUN email** au téléchargement du plugin gratuit. Pour un freemium WP.org, la **seule source d'email à l'activation = l'opt-in du SDK Freemius** (écran « Allow & Continue » à l'activation) — c'est un opt-in **produit/transactionnel**, pas un opt-in marketing. Concevoir là la capture, et un **opt-in marketing dédié distinct** (case séparée, non pré-cochée) pour le démarchage. Sans cette étape, il n'y a pas de liste.
+2. **D'où vient l'email ?** ⚠️ **wordpress.org ne transmet AUCUN email** au téléchargement du plugin gratuit. Pour un freemium WP.org, la **seule source d'email à l'activation est un opt-in intégré au plugin** : celui du SDK de licence/télémétrie s'il en a un (avec Freemius, l'écran « Allow & Continue »), sinon un formulaire d'inscription dans le plugin. C'est un opt-in **produit/transactionnel**, pas un opt-in marketing. Concevoir là la capture, et un **opt-in marketing dédié distinct** (case séparée, non pré-cochée) pour le démarchage. Sans cette étape, il n'y a pas de liste.
 3. **Source légale** : audience UE → GDPR + double opt-in recommandé (obligatoire DE/AT/CH/GR/LU/NO).
 
 ## 1. Cartographie des séquences (ROI décroissant)
 1. **Welcome / activation** (CRITIQUE) — à l'activation du plugin. Welcome + séquence d'expiration peuvent **doubler** la conversion.
 2. **Onboarding → aha moment** (CRITIQUE) — users activés convertissent 5-10× plus.
 3. **Upgrade free→paid** (CŒUR DU FREEMIUM) — déclenché par usage (limite atteinte, feature premium gated touchée, usage intensif).
-4. **Trial-to-paid** (si funnel trial Freemius activé) — séquence d'expiration.
+4. **Trial-to-paid** (si la plateforme propose un funnel trial et qu'il est activé) — séquence d'expiration.
 5. **Nurturing** — éducatif, entre les pics d'intention.
 6. **Win-back / réactivation** — réactiver coûte moins qu'acquérir.
-7. **Renewal / retention** — le renouvellement de **paiement** est géré par Freemius (§5).
+7. **Renewal / retention** — le renouvellement de **paiement** est géré par la plateforme de facturation (§5).
 
 Détail de chaque séquence + nombre d'emails + rythme : `references/sequences.md`.
 
@@ -48,10 +48,10 @@ Détail de chaque séquence + nombre d'emails + rythme : `references/sequences.m
 - **Win-back = la segmentation la plus critique** : concentrer sur high-value parti pour raison réparable. Le dernier email = **sunset notice** (puis suppression pour l'hygiène de liste).
 
 ## 5. Coordination avec le dunning (NE PAS ré-encoder)
-Le **dunning** (retries + emails de carte expirée/échec de paiement) est géré **côté Freemius** ([[freemius]]). Ce skill couvre seulement la **coordination** :
+Le **dunning** (retries + emails de carte expirée/échec de paiement) est géré **côté plateforme de facturation** ([[freemius]] quand le projet facture par Freemius). Ce skill couvre seulement la **coordination** :
 - **Suspendre** les sends marketing quand un user entre en état `payment_failed` (pas d'upsell pendant une relance de carte).
 - Sur `payment_recovered` → reprendre ; sur `subscription_cancelled` (échec définitif) → bascule vers **win-back**, pas vers une relance de paiement.
-- Écouter les **webhooks Freemius** comme triggers de changement de lifecycle stage — sans dupliquer la logique de retry.
+- Écouter les **webhooks de la plateforme** comme triggers de changement de lifecycle stage — sans dupliquer la logique de retry.
 
 ## 6. Métriques fiables (post-MPP)
 Piloter sur : **revenue-per-email + conversion**, **conversions/actions produit** (upgrade, feature activée, checkout), **reply rate** (même ~1 % compte), **CTOR hors Apple Mail / clics uniques filtrés bots**. L'open rate → timing relatif uniquement. Détail : `references/legal-deliverability.md`.

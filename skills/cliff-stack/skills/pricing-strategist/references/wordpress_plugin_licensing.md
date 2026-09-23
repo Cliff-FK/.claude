@@ -1,6 +1,6 @@
 # WordPress plugin/theme licensing & packaging — the site-based specifics
 
-> **Boundary:** this skill DECIDES the price/model/packaging. Configuring it in Freemius (creating the plan, the coupon, the webhook, the SDK gating) is the `freemius` skill's job — decide here, implement there.
+> **Boundary:** this skill DECIDES the price/model/packaging. Configuring it in the billing platform (creating the plan, the coupon, the webhook, the SDK gating) belongs to that platform's side (the `freemius` skill when it is Freemius) — decide here, implement there.
 >
 > Complements the generic Good/Better/Best logic of this skill with the WP-specific layer. Facts verified 2026-06-20 (Freemius blog cross-checked with real plugin prices + ProfitWell/Paddle + independent third-party sources). **Bias flag:** several of these come from the Freemius blog, which has a commercial interest in pushing recurring subscriptions over lifetime/monthly. Claims corroborated by independent sources are marked **[robust]**; Freemius-only recommendations are marked **[Freemius reco]**.
 

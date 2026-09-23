@@ -40,6 +40,7 @@
 - **Principe cardinal** : l'annulation **aussi facile que la souscription** ; l'offre ne bloque jamais le bouton d'annulation final.
 
 ## 5. Freemius : natif vs à bâtir
+Cas particulier, seulement quand le projet facture par Freemius (le vérifier dans le projet d'abord).
 - **[source primaire]** Natif : **Cancellation Survey** (Customer Portal), raisons prédéfinies + « Other » libre, exposée via events/webhooks/API/email transactionnel. Plus « License Retention Guidance » (dialog Retain vs cancel) — **guidance, pas offre**.
 - **À bâtir (couche maison)** : la logique « raison → offre matchée » (pause/downgrade/coupon présentés selon la raison) n'est **pas** fournie. Implémentation : webhook/feedback capte la raison → UI custom présente l'offre (coupon/pause via API Freemius) **avant** l'appel d'annulation. Les coupons existent comme feature séparée (« First payment only » vs « renewals ») — pour une remise de rétention sur un abonnement existant, **valider le mécanisme exact côté `freemius`** (cf. `freemius/reference/billing-mechanics.md` §4).
 

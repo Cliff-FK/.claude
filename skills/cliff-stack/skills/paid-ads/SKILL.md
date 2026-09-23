@@ -7,7 +7,7 @@ description: "Produit le PLAN d'acquisition payante pour vendre un produit logic
 
 > **Langue : réponds toujours en français** (accents complets). Termes techniques (Smart Bidding, PMax, RSA, Consent Mode, tCPA…) inchangés.
 
-Produit un **plan** d'acquisition payante : canal, structure de compte, angles créa, plan budget/enchères, framework de mesure. Complémentaire : [[seo-launch]] (organique long terme), [[copywriting-landing]] (la landing qui reçoit le clic), [[pricing-strategist]] (LTV/prix), [[freemius]] (revenu réel pour la mesure).
+Produit un **plan** d'acquisition payante : canal, structure de compte, angles créa, plan budget/enchères, framework de mesure. Complémentaire : [[seo-launch]] (organique long terme), [[copywriting-landing]] (la landing qui reçoit le clic), [[pricing-strategist]] (LTV/prix), la plateforme de facturation du projet pour le revenu réel de la mesure ([[freemius]] si c'est elle).
 
 > **PÉRIMÈTRE — un plan, pas un pilotage.** Ce skill ne lance ni n'optimise une campagne live (budget réel, Ads Manager, data de compte = hors de portée d'un LLM). Il produit : structure de compte, angles créa, plan budget/enchères, framework de mesure. Être explicite sur cette limite avec l'utilisateur.
 

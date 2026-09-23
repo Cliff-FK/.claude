@@ -41,8 +41,8 @@ Entre les pics d'intention : contenu éducatif (lié au [[seo-launch]] blog), ca
 | Upgrade free→paid | event | limite/feature gated/usage |
 | Trial expiration | time | J = fin trial − 30 % |
 | Win-back | behavior | seuil d'inactivité |
-| Renewal | time | avant échéance (paiement = Freemius) |
-| Suspension marketing | event (webhook Freemius) | `payment_failed` |
+| Renewal | time | avant échéance (paiement = plateforme de facturation) |
+| Suspension marketing | event (webhook de la plateforme) | échec de paiement (`payment_failed` chez Freemius) |
 
 ## Sources
 mailsoftly · digitalapplied (CRM playbook 2026) · smashsend · Userlist (trigger-based, re-engagement) · growthspree (benchmarks trial 2026) · ordwaylabs · customer.io · sequenzy · Freemius (upgrades, trials).
