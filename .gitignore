@@ -38,6 +38,10 @@
 
 !/phpcs-wp-native.xml
 
+# Notes de reprise des chantiers en cours
+!/suivi/
+!/suivi/**
+
 # Assets dont dépendent des hooks versionnés (sans eux le setup est cassé au clone)
 !/sounds/
 !/sounds/**
