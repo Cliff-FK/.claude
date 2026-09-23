@@ -9,8 +9,8 @@
   "query": "Je veux que mes blocs/patterns premium apparaissent dans l'inserter Gutenberg avec un cadenas : aperçu visible mais insertion bloquée sans le Pro. Comment je verrouille l'aperçu du pattern premium dans l'inserter ?",
   "expected_behavior": [
     "Dit qu'AUCUNE API native ne fait ça (bug Gutenberg #55469 ; Block Locking API = blocs déjà insérés, pas un aperçu inserter)",
-    "Redirige vers registerBlockVariation scope:['inserter'] + Placeholder d'upsell dans edit(), ou bloc absent (modèle Kadence)",
-    "Gating réel = can_use_premium_code() délégué à freemius, pas is_paying()"
+    "Redirige vers registerBlockVariation scope:['inserter'] + Placeholder d'upsell dans edit(), ou bloc absent tant que le Pro n'est pas installé",
+    "Gating réel délégué à la plateforme de licence du projet (si Freemius : can_use_premium_code(), pas is_paying())"
   ]
 }
 ```

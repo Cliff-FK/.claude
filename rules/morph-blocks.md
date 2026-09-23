@@ -1,17 +1,32 @@
 ---
 paths:
-  - "**/wp-content/plugins/morph-blocks/**"
+  - "**/wp-content/themes/*/includes/core/constants.php"
+  - "**/wp-content/themes/*/includes/core/signature.php"
+  - "**/wp-content/themes/*/includes/core/save-handler.php"
+  - "**/wp-content/themes/*/includes/core/render-mutate.php"
+  - "**/wp-content/themes/*/includes/core/runtime-serve.php"
+  - "**/wp-content/themes/*/includes/core/supports-rehydrate.php"
+  - "**/wp-content/themes/*/includes/core/css-classify.php"
+  - "**/wp-content/themes/*/includes/core/css-allowlist-extend.php"
+  - "**/wp-content/themes/*/includes/core/viewport.php"
+  - "**/wp-content/themes/*/includes/core/viewport-state.php"
+  - "**/wp-content/themes/*/includes/core/variant-sources.php"
+  - "**/wp-content/themes/*/includes/core/support.php"
+  - "**/wp-content/themes/*/includes/core/compile.php"
+  - "**/wp-content/themes/*/includes/core/editor.js"
+  - "**/wp-content/themes/*/includes/core/preSave-builder.js"
+  - "**/wp-content/themes/*/includes/core/store.js"
+  - "**/wp-content/themes/*/includes/themes/prepaint/**"
+  - "**/wp-content/themes/*/includes/admin/responsive/**"
+  - "**/wp-content/themes/*/includes/addons/listview-bullets/**"
+  - "**/wp-content/themes/*/includes/addons/preview-sync/**"
+  - "**/wp-content/themes/*/includes/addons/viewport-switch-overlay/**"
 ---
 
-# morph-blocks — pipeline multi-zones (une modif locale = risque cross-zone)
+# Moteur responsive morph (dans le thème) : une modif locale = risque cross-zone
 
-- **Arborescence** : `includes/core/` (pipeline + ses moitiés JS, requis en ordre explicite), `includes/addons/<unité>/` et `includes/admin/<unité>/` (chargées par SCAN), `licensing/`. Le **`CLAUDE.md` du plugin fait foi** : le lire avant de créer ou déplacer un fichier. Le JS vit avec le PHP qui l'enqueue, jamais dans un dossier d'assets séparé.
-- **Toute feature neuve naît verticale** : un dossier avec ses moitiés (PHP, JS, `*.asset.php`, CSS), sa moitié payante sous `premium/`. Rien à câbler : le loader et `compile.php` scannent. Un `*.asset.php` déclare handle, deps, translations et gate.
-- **Déplacer un JS = rejouer `npm run i18n` dans le MÊME geste** (les `.json` sont indexés sur le md5 du chemin ; un chemin changé les orpheline sans erreur, l'anglais s'affiche).
-- **Oracles de déplacement** : `tests/fingerprints.php` (empreinte avant/après) et `tests/module-gates.php` (axe déclenchement) en plus de `matrix.php`.
-- **Source vs build** : éditer la source (`includes/`, `licensing/` + JS source), **jamais `build/dist/**`** (sortie générée).
-- **Constantes = source de vérité** : `includes/core/constants.php` (SCHEMA_VER, meta keys, markers) — jamais de mémoire. Parité **PHP↔JS byte-for-byte** ; tout changement de payload/sig/meta-key → bump `MORPH_BLOCKS_SCHEMA_VER`.
-- **Zones** (editor / build+cache / serve / front / licensing / signature) reliées par la signature `pos_<hex>` + cache 1-ligne/post : **signaler les contrats cross-zone (seams) AVANT de changer**.
-- **Selon le besoin** : tâche cross-zone ou « pourquoi X end-to-end » → agent `morph-orchestrator` ; investigation d'une zone localisée → `morph-blocks-auditor` / l'agent de zone. **Pas pour une retouche triviale mono-fichier.**
-- **Jamais « résolu » sans chaîne admin→cache→front validée (vrai save UI, clic réel)** ; tout diagnostic = hypothèse jusqu'à mesure directe.
-- **Jamais deux agents Playwright en parallèle** (session navigateur unique) : sérialiser tout fan-out incluant `regression-tester` ou un agent de zone à navigateur.
+- **Portée** : les chemins ci-dessus sont les fichiers du moteur relevés le 23/09/2026 (un fichier ajouté au moteur s'ajoute ici) ; la règle ne vaut que si le fichier appartient bien au moteur de variantes par écran (fonctions `morph_blocks_*`, constantes `MORPH_BLOCKS_*`, clés `_morph_tablet` / `_morph_mobile`). Le moteur vit dans le thème depuis le 08/09/2026 ; l'ancienne extension `morph-blocks`, sa couche de licence et son build gratuit n'existent plus. Le préfixe `morph_blocks_` est un espace de noms conservé, pas la trace d'une extension.
+- **Le dépôt fait foi** : lire avant d'écrire le `CLAUDE.md` racine du projet, `includes/CLAUDE.md` du thème, les règles projet `.claude/rules/` (section « moteur responsive ») et la doc du moteur (chercher `morph_blocks_` dans le dossier `docs/` du projet). Arborescence, contrats (parité de signature, trois listes de sources, deux canaux d'adaptation, `SCHEMA_VER`), oracles et build y sont décrits : ne rien en recopier ici.
+- **Routage** : tâche multi-zone ou « pourquoi X ne marche pas de bout en bout » → agent `morph-orchestrator` ; investigation localisée → `morph-blocks-auditor` ou l'agent de zone (`morph-editor-agent`, y compris l'écran de réglages responsive, `morph-build-cache-agent`, `morph-serve-front-agent`, `morph-signature-contracts-agent`) ; non-régression → `regression-tester`. Pas pour une retouche triviale mono-fichier.
+- **Jamais « résolu » sans chaîne admin → cache → front validée** (vrai save UI, clic réel) et les oracles du projet au vert ; tout diagnostic reste une hypothèse jusqu'à mesure directe.
+- **Jamais deux agents à navigateur en parallèle** (session unique) : sérialiser tout fan-out incluant `regression-tester` ou un agent de zone équipé de Playwright.

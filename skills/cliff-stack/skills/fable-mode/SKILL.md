@@ -36,8 +36,8 @@ Les 3 portes anti-fausse-correction et le réflexe adversarial sont déjà dans 
 Préférer les skills/agents maison plutôt qu'improviser. Router par CAPACITÉ (les noms peuvent changer, les vérifier au runtime dans la liste de session, cf. [[reference/stack-maison]]) :
 
 - **Implémentation WordPress/Gutenberg** ou **Astro** → le skill natif du framework.
-- **Toute tâche morph-blocks multi-zone** (éditeur / build / cache / serve / front / licensing / signature) → l'orchestrateur morph-blocks (dispatche + impose la validation de chaîne bout-en-bout).
-- **Cadrage d'un plan de fix/refactor HORS morph-blocks** → l'agent critique de cadrage, avant de coder.
+- **Toute tâche multi-zone sur le moteur responsive morph** (variantes par écran embarquées dans le thème : éditeur / build+cache / serve+front / signature) → l'orchestrateur morph (dispatche + impose la validation de chaîne bout-en-bout).
+- **Cadrage d'un plan de fix/refactor HORS moteur responsive morph** → l'agent critique de cadrage, avant de coder.
 - **GTM / vente / contenu** → le skill business correspondant.
 - **Création/MAJ d'un skill ou d'un agent** → le builder dédié.
 

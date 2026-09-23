@@ -1,0 +1,12 @@
+# Éditeur iframé : invariants pour le code éditeur
+
+Sources : dev note « Iframed Editor Changes in WordPress 7.1 » (make.wordpress.org/core/2026/08/03/iframed-editor-changes-in-wordpress-7-1/), guide « Block migration for iframe editor compatibility » (developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/block-migration-for-iframe-editor-compatibility/), core 7.1.2.
+
+- **Depuis 7.1, l'éditeur de post est toujours iframé**, quels que soient le type de thème et l'`apiVersion` des blocs (dev note 7.1). En 7.1.2, `VisualEditor` passe `shouldIframe: true` sans condition (`wp-includes/js/dist/editor.js:95050`). Aucun opt-out documenté : un code qui ne fonctionne que hors iframe est cassé.
+- **Deux `document`, deux `window`** : les scripts éditeur tournent dans la page admin, les blocs sont dans l'iframe. `document`/`window` globaux visent la mauvaise fenêtre. Obtenir ceux du canvas depuis un ref : `node.ownerDocument`, `node.ownerDocument.defaultView`.
+- **`useRefEffect`** (`@wordpress/compose`) plutôt que `useEffect` pour brancher un listener sur un nœud du canvas : il se ré-exécute si le ref change (le nœud peut être remonté dans un autre document), en plus des dépendances.
+- **Nettoyage obligatoire** : le callback retourne la fonction qui retire chaque listener/observer posé (`defaultView.removeEventListener(...)`), sinon fuite à chaque remontage.
+- **Ne pas requêter l'iframe depuis le document parent** (`iframe[name="editor-canvas"]`) : ce nom est un détail interne du core (`block-editor.js:61597`), absent de la doc publique ; le ref donne le bon document sans en dépendre.
+- **Styles** : déclarés dans `block.json` (`style`, `editorStyle`) ou enqueués sur `enqueue_block_assets`, les deux seuls chemins que le core charge dans l'iframe (`_wp_get_iframed_editor_assets`, `wp-includes/block-editor.php:329-353`). Un style ajouté autrement n'est recopié qu'en mode compatibilité, avec `console.warn(... was added to the iframe incorrectly ...)` (`block-editor.js:47953`) : traiter ce warning comme un bug.
+- **Bibliothèques tierces** qui lisent les globaux : utiliser l'instance chargée dans l'iframe via `defaultView` (chargement asynchrone, vérifier sa présence) ou corriger la bibliothèque pour qu'elle passe par `ownerDocument`/`defaultView` (guide de migration).
+- Vérification : en UI réelle (Playwright), dans l'éditeur de post, pas seulement le site editor.

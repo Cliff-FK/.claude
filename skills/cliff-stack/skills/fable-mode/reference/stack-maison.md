@@ -13,12 +13,12 @@ But : router vers le bon skill/agent SANS coder de nom en dur (les noms peuvent 
 |---|---|
 | Feature/bloc/réglage WordPress ou Gutenberg | skill d'implémentation WP-native |
 | Feature/composant/page Astro | skill d'implémentation Astro-native |
-| Bug/audit/feature morph-blocks (une seule zone) | agent de la zone concernée (editor, build+cache, serve, front, licensing, signature) |
-| Tâche morph-blocks touchant plusieurs zones, ou "pourquoi X ne marche pas de bout en bout" | orchestrateur morph-blocks (dispatche + impose la chaîne admin→cache→front) |
-| Investigation morph-blocks générale (repro Playwright + cache DB + code) | agent auditeur morph-blocks |
-| Non-régression après un fix morph-blocks (matrice save-paths × viewports) | agent testeur de régression |
+| Bug/audit/feature du moteur responsive morph (une seule zone) | agent de la zone concernée (editor, build+cache, serve+front, signature) |
+| Tâche du moteur responsive morph touchant plusieurs zones, ou "pourquoi X ne marche pas de bout en bout" | orchestrateur morph (dispatche + impose la chaîne admin→cache→front) |
+| Investigation générale du moteur responsive morph (repro Playwright + cache DB + code) | agent auditeur morph |
+| Non-régression après un fix du moteur responsive morph (matrice save-paths × viewports) | agent testeur de régression |
 | Tracer un bloc WP dans son pipeline de rendu (instrumentation temporaire) | agent traceur de pipeline de bloc WP |
-| Cadrage d'un plan de fix/refactor HORS morph-blocks (cause à la source, bon niveau) | agent critique de cadrage |
+| Cadrage d'un plan de fix/refactor HORS moteur responsive morph (cause à la source, bon niveau) | agent critique de cadrage |
 | Landing/page de vente/copy | skill copywriting landing |
 | SEO/contenu/acquisition organique | skill SEO launch |
 | Modèle de prix/tiers/WTP | skill pricing strategist |

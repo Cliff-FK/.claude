@@ -25,6 +25,11 @@ Objectif : toute feature WP est codée **avec le maximum de natif WP**, **sourc�
 3. **Variations / block styles / patterns** plutôt qu'un bloc dédié quand c'est cosmétique.
 4. **Bloc custom** en dernier : `block.json` **apiVersion 3**, `useBlockProps()` / `useInnerBlocksProps()`, `render.php` pour le dynamique.
 
+> **Références ciblées** (à lire selon le sujet) :
+> - `references/editor-iframe.md` : script éditeur qui touche au DOM/window du canvas, styles de bloc absents dans l'éditeur.
+> - `references/deprecations.md` : modification du `save()` ou des attributs d'un bloc déjà publié.
+> - `references/perf-backend.md` : lenteur back-end, profilage, autoload.
+
 > **Modes de save/render** (statique C1 / dynamique C2 / hybride C3 ; sources d'attributs `html`/`rich-text`/`attribute`/Block Bindings ; **pipeline de restitution serveur UNIVERSEL** : filtre `render_block`/`render_block_data` — distinct du `render_callback`, s'applique même aux C1 —, **block supports** générant classes/styles hors `save()` via `get_block_wrapper_attributes` au render, `apiVersion 3`/`useBlockProps` au save, résolution des **Block Bindings** et transformation propre du markup via **`WP_HTML_Tag_Processor`** ; compositions InnerBlocks ; cas spéciaux core ; **angle mort des chemins de save non-REST** : `save_post` toujours émis par `wp_insert_post`, `wp_after_insert_post` sauf si `fire_after_hooks=false`, `rest_after_insert_*` strictement REST ; **attribut synthétique** injecté en JS, absent du `WP_Block_Type_Registry`) → **`references/block-save-render-matrix.md`**. À lire dès qu'une feature touche le pipeline de rendu (post-traitement de markup, cache, re-render serveur, variante de contenu, rich-text, block supports, ou un réglage maison ajouté à des blocs core par filtre/HOC).
 
 ## 2. React = 100 % WP natif (RÈGLE FORTE — vaut pour TOUTE UI admin/éditeur)
@@ -37,9 +42,10 @@ Objectif : toute feature WP est codée **avec le maximum de natif WP**, **sourc�
 - `ToolsPanelItem` pour s'intégrer aux panneaux natifs ; `isShownByDefault` selon l'UX voulue.
 
 ## 3. Conventions 2026 (PHP + sécurité)
-- **theme.json v3**, supports > CSS inline ; presets via `var(--wp--preset--…)`.
+- **theme.json v3**, supports > CSS inline ; presets via `var(--wp--preset--…)` avec le slug passé par `_wp_to_kebab_case` (`3xl` → `3-xl`, cf. `rules/wordpress-php.md`).
 - Post-traitement de markup : **`WP_HTML_Tag_Processor`** (jamais de regex sur du HTML).
-- **i18n** systématique (`__()/esc_html__()` + textdomain) ; **escaping** en sortie (`esc_html/esc_attr/esc_url/wp_kses`) ; **sanitization** en entrée ; nonces/capabilities pour toute écriture.
+- **i18n** systématique (`__()/esc_html__()` + textdomain, jamais avant `init`, cf. `rules/wordpress-php.md`).
+- **Sécurité** : contrôles obligatoires par point d'entrée (REST, AJAX, admin-post, options, cron, uploads, HTTP sortant, désérialisation, chemins, SQL, données JS, sortie) → **`../../references/wp-security-controls.md`**, à lire avant d'écrire un handler ou une route.
 - Hooks idiomatiques, priorités explicites ; pas de requête lourde non cachée (transient/cache si chaud).
 - Pas de `__experimental`/`__unstable` si une API stable existe ; si inévitable, isole + commente la dette.
 

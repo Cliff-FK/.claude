@@ -61,7 +61,7 @@ Présenter le rapport. **Ne jamais corriger sans validation explicite.** Demande
 
 ## 5. Corriger — fan-out de correction (sur go : 1 agent par correction, max 5)
 Pour chaque correction validée, déléguer à un agent qui corrige **dans le bon dossier projet** identifié.
-- **Routage préférentiel** : router vers l'agent spécialisé le plus pertinent pour le projet ciblé (ex. pour un projet builder/morph-blocks, un agent `morph-*` ou `regression-tester`) plutôt que `general-purpose`. Découvrir les agents disponibles, ne pas en supposer.
+- **Routage préférentiel** : router vers l'agent spécialisé le plus pertinent pour le projet ciblé (ex. pour un projet dont le thème embarque le moteur responsive morph, un agent `morph-*` ou `regression-tester`) plutôt que `general-purpose`. Découvrir les agents disponibles, ne pas en supposer.
 - Doctrine de l'utilisateur (cf. `~/.claude/CLAUDE.md`) : **cause racine** (pas de rustine), **DRY** sur le code/filters/hooks **du projet ciblé**, rien en dur, code moderne perf/sécu/LCP.
 - Plusieurs agents sur **le même projet en parallèle** → isoler en **git worktree** ; sinon édition directe.
 - Chaque agent produit le diff + un test qui prouve le **comportement** corrigé.

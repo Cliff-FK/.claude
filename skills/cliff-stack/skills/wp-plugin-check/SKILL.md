@@ -21,9 +21,13 @@ Sur demande explicite, ou avant un commit/release d'un plugin distribuable. Pas 
    - Regrouper par code de sniff, trier par gravité. Mettre en tête **Security** (EscapeOutput, ValidatedSanitizedInput, NonceVerification), **i18n** (MissingTranslatorsComment, textdomain), **PrefixAllGlobals**.
    - Pour chaque famille : fichier:ligne + fix idiomatique (cf. skill `wp-native` : `esc_*`, `wp_unslash`+`sanitize_*`, nonce/capability, `/* translators: */`, préfixe unique).
    - Distinguer **bloquant repo** (empêche l'accept WordPress.org) vs **best-practice**.
-5. **Ne pas auto-corriger en masse** : proposer le diff, appliquer après validation (règle propose-before-acting). Corriger la cause, pas masquer le sniff.
+5. **Revue logique (ce que Plugin Check ne voit pas)** : ses sniffs sont syntaxiques (sortie échappée, nonce présent, requête préparée) ; ils ne prouvent ni l'autorisation par objet, ni un `permission_callback` adapté à chaque méthode, ni la SSRF, la désérialisation, les chemins inclus, le cron sans utilisateur, les paramètres REST non déclarés persistés.
+   - Inventaire des points d'entrée et sinks : `bash scripts/scan-security-sinks.sh <dossier-du-plugin>` (lecture seule, heuristique : un hit n'est pas une faille, zéro hit n'est pas une preuve ; exige `rg` dans le PATH, sinon rejouer ses motifs avec l'outil Grep).
+   - Pour chaque point d'entrée, vérifier les contrôles de **`../../references/wp-security-controls.md`** en suivant la donnée jusqu'au sink.
+   - Classer selon la méthode de cette référence : **Confirmé** / **Piste non vérifiée** / **Durcissement** ; gravité uniquement pour les Confirmés, pas de score global, périmètre non revu listé.
+6. **Ne pas auto-corriger en masse** : proposer le diff, appliquer après validation (règle propose-before-acting). Corriger la cause, pas masquer le sniff.
 
 ## Garde-fous
 - Thème détecté (`wp-content/themes/`) → refuser et rediriger vers PHPCS/WPCS.
 - Sortie volumineuse → résumer, ne pas vomir le CSV brut.
-- L'absence de violations « repo » ≠ plugin parfait : signaler les warnings perf/a11y restants.
+- L'absence de violations « repo » ≠ plugin parfait : signaler les warnings perf/a11y restants, et ne jamais conclure « sécurisé » sans l'étape 5.

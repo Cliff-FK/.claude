@@ -140,8 +140,10 @@ Invariants à respecter pour toute transformation du pipeline multi-niveaux :
 - **`core/image`** : C3a ; certains thèmes strippent le `<figure>` **après** le `render_callback`
   (filtre sur le markup). Les attributs visés peuvent migrer du `<figure>` vers le `<img>`.
 - **`core/query` + `post-template`** : in-loop. Le rendu dépend du post courant de la boucle ; ne pas
-  servir un cache « hôte » global, scoper par `get_the_ID()`. Pagination pages 2+ via POST/AJAX
-  (Interactivity API) = markup injecté après coup → un `MutationObserver` est nécessaire pour le rattraper.
+  servir un cache « hôte » global, scoper par `get_the_ID()`. Pagination pages 2+ avec
+  `enhancedPagination` : le routeur Interactivity fait un `fetch` GET de la page HTML complète, la parse
+  (`DOMParser`) et remplace la région `data-wp-router-region` = markup injecté après coup, sans rechargement
+  de page → un `MutationObserver` est nécessaire pour le rattraper.
 - **`core/block`** (référence de bloc réutilisable `wp_block`) : `do_blocks` scopé sur l'ID du
   `wp_block`, pas du post hôte.
 - **`core/page-list-item`** : ni `save.js` ni `render_callback` — sous-composant géré par le parent.

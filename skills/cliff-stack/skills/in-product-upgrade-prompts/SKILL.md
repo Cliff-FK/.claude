@@ -12,7 +12,7 @@ Conçoit la **stratégie de conversion in-product** d'un plugin WP freemium : o�
 ## Frontière dure — ce skill DÉCIDE, il ne code pas (déléguer)
 
 - **Implémentation des blocs/variations/JS éditeur** (registerBlockType, build, enqueue) → `[[wp-native]]`.
-- **Gating de licence / checkout / entitlements** (qui a le droit, débloquer après achat) → `[[freemius]]` (gater le code premium avec `can_use_premium_code()`, pas `is_paying()`).
+- **Gating de licence / checkout / entitlements** (qui a le droit, débloquer après achat) → la plateforme de licence du projet ; si c'est Freemius, `[[freemius]]` (gater le code premium avec `can_use_premium_code()`, pas `is_paying()`).
 - **Niveau de prix, quelles features dans quel palier** → `[[pricing-strategist]]`.
 - **Copy de landing / page de vente** → `[[copywriting-landing]]`. **Upsell par email** → `[[email-lifecycle]]`.
 - **Audit a11y / dark-pattern du prompt** → `[[design-auditor]]`.
@@ -23,12 +23,13 @@ Ce skill produit : la stratégie de placement, les triggers, la microcopy in-con
 L'upsell in-editor est **autorisé mais encadré** par les Plugin Guidelines WordPress.org. À respecter sous peine de rejet :
 - **Plugin Directory principal = freemium OK.** **Block Directory = paywall INTERDIT** (« No form of payment is permitted for the use of a Block Plugin »). → Un plugin freemium avec teasing Pro va dans le **Plugin Directory**, jamais le Block Directory.
 - **Guideline 11** : les upgrade prompts/notices doivent être **limités, contextuels** (page de réglages du plugin OU au point d'usage), **dismissibles** ou auto-dismiss. **Interdits** : nags admin globaux répétés, notices non-dismissibles, pub dashboard, alertes hors-sujet.
-- **Guideline 5** : l'upsell de features ad-hoc est explicitement « acceptable » s'il reste dans les bornes de la 11.
+- **Guideline 5 (Trialware)**, règle principale : « Plugins may not contain functionality that is restricted or locked, only to be made available by payment or upgrade » (ni désactivation après essai ou quota). L'upsell de features ad-hoc n'y est « acceptable » que dans les bornes de la 11 ; les guidelines recommandent un add-on hébergé hors WordPress.org pour exclure le code premium.
+→ Corollaire : un placement « contrôle désactivé + Pro » n'est conforme que si le **code premium est ABSENT du build gratuit** (le contrôle ne fait qu'annoncer). Code Pro présent mais bridé par une licence = trialware.
 → Le pattern sûr = **surfacer au point de friction** (le bloc/l'option Pro lui-même), pas interrompre globalement.
 
 ## RÈGLE NON NÉGOCIABLE #2 — API réelles, pas inventées
 
-Source de vérité : `reference/gutenberg-upsell-apis.md` (vérifié sur developer.wordpress.org). Avant de proposer une API d'éditeur, la confirmer là ou via **Context7** (`/freemius/wordpress-sdk` pour le gating, packages `@wordpress/*` pour l'UI). Pièges déjà vérifiés :
+Source de vérité : `reference/gutenberg-upsell-apis.md` (vérifié sur developer.wordpress.org). Avant de proposer une API d'éditeur, la confirmer là ou via **Context7** (packages `@wordpress/*` pour l'UI ; SDK de la plateforme de licence du projet pour le gating). Pièges déjà vérifiés :
 - ❌ **Il n'existe AUCUNE API native de « premium pattern verrouillé/preview-bloqué dans l'inserter »** (le comportement « verrouillé » observé = bug Gutenberg #55469 ; le Block Locking API verrouille des blocs **déjà insérés**, pas un aperçu premium). Ne pas le promettre.
 - ❌ Ne pas détourner `allowedBlocks` (restriction d'InnerBlocks) ni Block Bindings comme mécanismes d'upsell — hors sujet.
 - ⚠️ Les SlotFills (`PluginSidebar`, `PluginPrePublishPanel`…) sont désormais dans **`@wordpress/editor`** (plus `@wordpress/edit-post`, déprécié). Vérifier au build.
@@ -36,11 +37,11 @@ Source de vérité : `reference/gutenberg-upsell-apis.md` (vérifié sur develop
 
 ## Les 3 placements recommandés (du moins au plus intrusif)
 
-1. **Option Pro visible mais inerte** dans un panneau de réglages (InspectorControls) : contrôle désactivé + mention « Pro » + CTA. Le plus sûr réglementairement. Pattern observé : Spectra/Stackable/Otter.
-2. **Bloc Pro rendu en placeholder d'upsell** : si le bloc Pro apparaît dans l'inserter (via `registerBlockVariation` `scope:['inserter']`), son `edit()` rend un composant **`Placeholder`** (label + instructions + `Button variant="primary"` CTA) au lieu du bloc réel tant que non débloqué. Surface au **point d'insertion** = friction exacte. Pattern façon FooGallery (preview + items Pro marqués).
+1. **Option Pro visible mais inerte** dans un panneau de réglages (InspectorControls) : contrôle désactivé + mention « Pro » + CTA. Le plus sûr réglementairement, **à condition que le code Pro soit absent du build gratuit** (guideline 5). Pattern courant chez les bibliothèques de blocs grand public.
+2. **Bloc Pro rendu en placeholder d'upsell** : si le bloc Pro apparaît dans l'inserter (via `registerBlockVariation` `scope:['inserter']`), son `edit()` rend un composant **`Placeholder`** (label + instructions + `Button variant="primary"` CTA) au lieu du bloc réel tant que non débloqué. Surface au **point d'insertion** = friction exacte. Pattern courant chez les plugins de galerie : aperçu live, éléments Pro marqués.
 3. **Zone Pro centralisée** dans un `PluginSidebar` dédié et/ou la page de réglages du plugin (zone explicitement tolérée pour un upsell plus riche).
 
-Modèle le plus conservateur (zéro risque) : **blocs Pro absents tant que le plugin Pro n'est pas installé** (Kadence/GenerateBlocks) — pas de teasing in-inserter du tout. À proposer si le client veut éviter tout risque guideline.
+Modèle le plus conservateur (zéro risque) : **blocs Pro absents tant que le plugin Pro n'est pas installé** (choix de plusieurs bibliothèques de blocs et constructeurs grand public) — pas de teasing in-inserter du tout. À proposer si le client veut éviter tout risque guideline.
 
 ## Triggers — quand prompter (et upgrade vs avis)
 
