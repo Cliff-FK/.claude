@@ -52,7 +52,13 @@
     "ask": [
       "Workflow",
       "Edit(~/.claude/skills/cliff-stack/hooks/**)",
-      "Write(~/.claude/skills/cliff-stack/hooks/**)"
+      "Write(~/.claude/skills/cliff-stack/hooks/**)",
+      "Edit(~/.claude/settings.json)",
+      "Write(~/.claude/settings.json)",
+      "Edit(~/.claude/settings.local.json)",
+      "Write(~/.claude/settings.local.json)",
+      "Edit(~/.claude/write-scope-extra-roots.txt)",
+      "Write(~/.claude/write-scope-extra-roots.txt)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
