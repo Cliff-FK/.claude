@@ -61,10 +61,16 @@ try {
     if ($scriptText -match '(?im)^\s*//\s*agents-max\s*:\s*(\d+)') {
         $declared = [int]$Matches[1]
         if ($declared -le $MAX_AGENTS) { exit 0 }
-        if ($scriptText -match '(?im)^\s*//\s*agents-max-user-ok\b') { exit 0 }
-        [Console]::Error.WriteLine("BLOQUE par guard-workflow-budget : fan-out declare agents-max: $declared > plafond user $MAX_AGENTS.")
-        [Console]::Error.WriteLine("Deux issues : (a) reduis le fan-out du script sous $MAX_AGENTS (moins de sources/claims/votes, ou plusieurs runs sequentiels cibles) ; (b) si l'echelle est vraiment necessaire, demande une validation EXPLICITE a l'utilisateur via AskUserQuestion (cout estime inclus), puis ajoute '// agents-max-user-ok' sous la declaration. Ne contourne pas ce garde.")
-        exit 2
+        # Au-delà du plafond : l'invite de permission du harnais recueille l'accord humain
+        # (remplace l'ancien marqueur '// agents-max-user-ok', écrit par le modèle lui-même).
+        @{
+            hookSpecificOutput = @{
+                hookEventName            = 'PreToolUse'
+                permissionDecision       = 'ask'
+                permissionDecisionReason = "Workflow à $declared agents, au-delà du plafond de $MAX_AGENTS. Valider seulement si cette échelle est voulue."
+            }
+        } | ConvertTo-Json -Compress -Depth 4
+        exit 0
     }
 
     [Console]::Error.WriteLine("BLOQUE par guard-workflow-budget : aucune declaration '// agents-max: N' en tete de script.")

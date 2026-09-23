@@ -271,3 +271,48 @@ When `clamp(MIN, PREFERRED, MAX)` is found:
   → Run role-mapping algorithm using MAX values (desktop)
   → Separately verify MIN values are above minimums (body ≥ 14px, caption ≥ 11px)
   → Flag if MIN drops below readable threshold even if MAX is fine
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 1: Typography
+*Full rules → `references/typography.md`*
+
+- [ ] **Hierarchy** — Clear visual difference between headings, subheadings, body? (Size, weight, or color should vary meaningfully.)
+- [ ] **Font count** — Max 2 font families. More = visual chaos.
+- [ ] **Body text size** — Min 14px, 16px preferred. Never below 12px for any visible text.
+- [ ] **Line height** — 1.4–1.6× the font size for body text.
+- [ ] **Line length** — 60–80 characters per line. Wide lines (100+ chars) tire the eyes.
+- [ ] **Text contrast** — WCAG AA: 4.5:1 for normal text, 3:1 for large text (18px+).
+- [ ] **Alignment** — Don't randomly mix left-aligned and center-aligned body text.
+
+**→ Widget trigger:** Always attempt to trigger the **Type Scale Stack** widget on Figma or code input — do not wait for a typography issue to be found first. Extract all font sizes from `get_design_context` data directly:
+
+```
+From get_design_context, collect all unique fontSize values across all text nodes.
+Map each size to its likely role based on relative size and usage frequency:
+  - Largest 1–2 sizes → heading (h1, h2)
+  - Mid-range sizes → subheading / label (h3, h4, label)
+  - Most frequent size → body
+  - Smallest sizes → caption / helper
+
+Then check:
+  - Any body text fontSize < 14 → 🔴 Critical
+  - Two sizes within 2px of each other → 🟡 Warning (too close to distinguish)
+  - Same fontSize used for visually different roles → 🟡 Warning (relies on weight alone)
+  - No size below 12px → ✅
+  - Scale ratio between adjacent levels (e.g. body→h2) < 1.2 → 🟡 Warning (too flat)
+  - More than 5 distinct font sizes → 🟡 Warning (scale too complex)
+
+Pass the collected sizes and roles as data to the widget.
+If get_design_context returns no text nodes or fontSize data, skip the widget silently.
+```
+
+Introduce with one sentence in the user's detected language:
+- English: *"Here's how your type scale stacks up visually."*
+- Korean: *"타입 스케일을 시각적으로 확인해 보세요."*
+
+---

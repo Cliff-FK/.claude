@@ -239,3 +239,50 @@ These text colors have been checked against common background colors:
 | Dark blue #1E3A5F | White #FFFFFF | Clearly passes |
 
 **When in doubt, use a contrast checker tool.** Don't eyeball it.
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 2: Color & Contrast
+*Full rules → `references/color.md`*
+
+- [ ] **WCAG contrast** — Normal text ≥ 4.5:1, large text ≥ 3:1, UI components ≥ 3:1.
+- [ ] **Color-only meaning** — Never use color as the *only* signal. Pair with icon or text.
+- [ ] **Palette size** — 1 primary + 1 accent + neutrals beats many colors.
+- [ ] **Color consistency** — Same color = same meaning everywhere.
+- [ ] **Low-contrast combos** — Light gray on white, yellow on white, white on light blue all commonly fail.
+- [ ] **Color blindness risk** — Red/green pairs (most common — affects ~8% of men), blue/yellow pairs, and low-saturation combinations all pose risk. Never rely on hue alone to convey state.
+
+**→ Widget trigger:** If any contrast issue is found — whether from `get_variable_defs` color token analysis (preferred) or from visual screenshot assessment — use the Visualizer to render the **Contrast Checker** widget. Pre-populate the foreground and background hex values from the failing pair. When contrast was calculated from design tokens, show the exact token names alongside the hex values (e.g. `color/text/secondary #8A8A8A on color/surface/default #FFFFFF — ratio: 3.1:1 ❌`). The widget shows all 5 WCAG pass/fail levels live, a real text preview at heading/body/label sizes, and automatically calculates the nearest passing hex value as a fix suggestion. Introduce with one sentence in the user's detected language:
+- English: *"Use this to test fixes — the widget calculates the exact color adjustment needed."*
+- Korean: *"이 도구로 수정 사항을 바로 테스트해 보세요 — 통과 가능한 정확한 색상값을 자동으로 계산해 드립니다."*
+
+**Color blindness context — add to every Cat 2 color issue flagged:**
+For each failing or risky color pair, append a one-line color blindness note:
+```
+Pair type → Color blindness note to append:
+
+  Red + Green (e.g. red error on green success, red text on green bg):
+    → "⚠️ Deuteranopia/Protanopia risk — red and green are indistinguishable for ~8% of men.
+       Add a non-color signal: icon, pattern, or label."
+
+  Red/Orange + background (error states, alerts):
+    → "⚠️ Protanopia risk — reds appear dark brown/black. Pair with an icon (✕, ⚠) and text."
+
+  Blue + Yellow / Blue + Orange:
+    → "⚠️ Tritanopia risk — blue and yellow are confused. Use contrast + shape cues."
+
+  Low saturation pairs (grey on grey, muted tones):
+    → "⚠️ All types — low-saturation pairs affect all color blindness types. Increase contrast."
+
+  High-contrast black/white pairs:
+    → No color blindness note needed — safe for all types.
+
+Only add the note when the pair is actually present in the design. Never add generic warnings
+to every color. One line, appended after the fix suggestion.
+```
+
+---

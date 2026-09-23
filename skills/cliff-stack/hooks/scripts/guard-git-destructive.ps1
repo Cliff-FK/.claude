@@ -2,7 +2,7 @@
 # pour le travail non commité. Force Claude à demander l'autorisation explicite de l'user
 # avant tout revert (leçon : un `git checkout --` a effacé du travail non commité sans accord).
 #
-# Bloque (exit 2 → le tool est refusé, le message stderr revient à Claude) :
+# Demande une validation humaine native (permissionDecision « ask ») pour :
 #   - git checkout -- <path> / git checkout . / git checkout -f / git checkout <path>  (restaure, écrase les modifs)
 #   - git restore <path>                                                                (idem, syntaxe moderne)
 #   - git reset --hard                                                                  (jette working tree + index)
@@ -27,16 +27,6 @@ try {
     $payload = $raw | ConvertFrom-Json
     $cmd = [string]$payload.tool_input.command
     if (-not $cmd) { exit 0 }
-
-    # Dérogation one-shot : l'autorisation explicite a DÉJÀ été obtenue via AskUserQuestion.
-    # Claude crée ce fichier sentinelle APRÈS l'accord de l'user, jamais avant ni sans demande.
-    # Consommé (supprimé) dès ce passage ; validité 10 min pour éviter une dérogation orpheline.
-    $sentinel = Join-Path $env:USERPROFILE '.claude\git-destructive-authorized'
-    if (Test-Path $sentinel) {
-        $sentinelAge = (Get-Date) - (Get-Item $sentinel).LastWriteTime
-        Remove-Item $sentinel -Force
-        if ($sentinelAge.TotalMinutes -lt 10) { exit 0 }
-    }
 
     # Retire les portions CITÉES (messages de commit -m "...", heredocs) AVANT analyse :
     # sinon un message qui mentionne "reset --hard" serait bloqué à tort (faux positif).
@@ -97,11 +87,16 @@ try {
     }
 
     if ($blockedReason) {
-        # exit 2 = blocage PreToolUse ; le texte stderr est renvoyé à Claude comme raison.
-        [Console]::Error.WriteLine("BLOQUE par guard-git-destructive : $blockedReason.")
-        [Console]::Error.WriteLine("Operation git DESTRUCTIVE pour du travail non commite. Tu DOIS demander une autorisation EXPLICITE a l'utilisateur (via AskUserQuestion) AVANT de lancer un revert git. Ne contourne pas ce garde.")
-        [Console]::Error.WriteLine("Si (et seulement si) l'utilisateur a DEJA repondu OUI via AskUserQuestion dans ce meme contexte : creer le fichier sentinelle ~\.claude\git-destructive-authorized (one-shot, valide 10 min) puis relancer la commande.")
-        exit 2
+        # Décision « ask » : l'invite de permission du harnais recueille l'accord humain.
+        # Remplace l'ancienne sentinelle, qui était écrite par le modèle lui-même.
+        @{
+            hookSpecificOutput = @{
+                hookEventName            = 'PreToolUse'
+                permissionDecision       = 'ask'
+                permissionDecisionReason = "Git destructif pour du travail non commité : $blockedReason. Validation humaine requise."
+            }
+        } | ConvertTo-Json -Compress -Depth 4
+        exit 0
     }
 } catch {
     # En cas d'erreur de parsing : ne pas bloquer (faux positif pire qu'un blocage manqué ici).

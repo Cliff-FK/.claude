@@ -224,6 +224,28 @@ foreach ($pat in $destructivePatterns) {
     if ($cmd -match $pat) { $isDestructive = $true; break }
 }
 
+# --- 2a. Configuration de sécurité Claude : validation HUMAINE native ---------
+# ~/.claude est une zone d'écriture libre ; sans ce contrôle, une commande shell peut
+# réécrire les barrières elles-mêmes (settings, extra-roots, scripts de hooks, sentinelle).
+# Décision « ask » = invite de permission du harnais, jamais un fichier écrit par le modèle.
+# Détection par NOM (chemins ~, $HOME, relatifs compris) : au mieux, un filtrage par
+# chaîne ne voit pas une écriture indirecte ; la barrière primaire reste les règles
+# ask Edit/Write de settings.json.
+$configNames = '(?i)(settings(\.local)?\.json|write-scope-extra-roots|hooks[\\/](scripts|hooks\.json)|hooks\.json|git-destructive-authorized)'
+$mutating = $isDestructive -or
+    $cmd -match '(?i)\b(sed|perl)\s+(-\S+\s+)*-[a-z]*i' -or
+    $cmd -match '(?i)\b(python\d?|php|node|perl|ruby|pwsh|powershell)(\.exe)?\s+(-\S+\s+)*(-c|-r|-e|-Command)\b'
+if ($mutating -and $cmd -match $configNames) {
+    @{
+        hookSpecificOutput = @{
+            hookEventName            = 'PreToolUse'
+            permissionDecision       = 'ask'
+            permissionDecisionReason = "Commande shell qui peut modifier la configuration de sécurité Claude ($($matches[1])). Validation humaine requise."
+        }
+    } | ConvertTo-Json -Compress -Depth 4
+    exit 0
+}
+
 if (-not $isDestructive) { exit 0 }
 
 # --- Collecte unifiée des paths (quotés + non quotés) -------------------------

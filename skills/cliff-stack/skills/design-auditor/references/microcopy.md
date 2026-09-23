@@ -225,3 +225,86 @@ When auditing text content in a Figma frame or codebase, classify each text node
 
 **Audit citation format:** Always quote the exact text and include the node ID when available.
 `🟡 Button label "Submit" (node 68:27811) — vague verb. Use "Save Changes" or "Send Report" instead.`
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 12: Content & Microcopy
+*The words inside a UI are part of the design. Read `references/microcopy.md` for full guidance.*
+
+**On Figma/code input: read every text node.** `get_design_context` returns all text content. Extract and check each one — do not guess. Group them by role:
+
+```
+Text content extraction (Figma + code):
+  1. Collect all text node values from get_design_context
+  2. Classify each by role:
+     - CTA buttons: text nodes inside button components
+     - Labels: text nodes associated with inputs (above/beside)
+     - Placeholders: text nodes with placeholder-style content ("Search", "Enter...", "eg:")
+     - Error messages: text nodes near error states or with error styling
+     - Empty state messages: text nodes in empty/zero-state frames
+     - Section headers / titles: largest text nodes in a section
+  3. Apply checks per role (see below)
+  4. Cite the exact text content and node ID in each issue
+     e.g. 🟡 "Placeholder 'eg: 5' (node 68:27994) — informal prefix. Use '0' or unit hint."
+```
+
+Per-role checks:
+- [ ] **Button labels are verbs** — "Save Changes", "Send Message" not "OK", "Submit", "Yes"
+- [ ] **Error messages are human** — "Invalid input" → 🔴. "Please enter a valid email" → ✅
+- [ ] **Placeholder ≠ label** — Placeholders hint at format (e.g. "name@example.com"), never replace a label. Flag any placeholder that duplicates its label exactly.
+- [ ] **Placeholder prefix style** — "eg:", "e.g." → 🟡 informal. Use the example value directly or a unit label.
+- [ ] **Destructive actions are explicit** — "Delete" dialogs should name what's being deleted. "Are you sure?" alone → 🟡
+- [ ] **Consistent terminology** — Flag if the same concept uses different words across text nodes (e.g. "workspace" and "project" used interchangeably)
+- [ ] **Tone consistency** — Formal in one section, casual in another → 🟡
+- [ ] **No lorem ipsum** — Any "lorem ipsum" or "placeholder text" string → 🔴 Critical at Dev handoff or later
+- [ ] **Empty states have direction** — "No results found" alone → 🟡. Should include a next action.
+- [ ] **Required field legend** — If * is used for required fields, check for a "* Required fields" legend somewhere in the frame. Missing → 🟢 Tip.
+
+**📋 Code input: direct checks available (run these automatically)**
+```
+Button label audit:
+  → Collect all <button>, <a role="button">, and submit-type elements and extract their text content
+  → Labels that are not verbs or verb phrases → 🟡 Warning
+    ❌ "OK", "Yes", "Submit", "Click here", "More"
+    ✅ "Save changes", "Send message", "Get started", "Delete account"
+  → Icon-only buttons with no aria-label → 🔴 Critical (also caught by Cat 6, flag once)
+  → Button text identical to page heading (no specificity) → 🟡
+    e.g. two "Submit" buttons on the same page with no differentiating context
+
+Error message audit:
+  → Scan all string literals used in error/validation contexts (near catch blocks, validation fns, error state renders)
+  → Strings that are purely technical → 🟡 Warning
+    ❌ "Invalid input", "Error 422", "Request failed", "null", "undefined"
+    ✅ "Please enter a valid email address", "Something went wrong — try again"
+  → Error strings with no guidance on how to fix → 🟡
+  → aria-describedby linked error messages (cross-check with Cat 7) → ✅
+
+Placeholder audit:
+  → Collect all placeholder="..." attribute values
+  → Placeholder that exactly duplicates its label text → 🟡
+    e.g. label="Email" + placeholder="Email" — redundant, adds no value
+  → Placeholder starting with "eg:", "e.g.", "ex:" → 🟡 informal prefix
+    Prefer: use the example directly — placeholder="name@example.com"
+  → Placeholder used as sole label (no visible <label>) → 🔴 (also Cat 7)
+
+Lorem ipsum / filler content:
+  → Any string containing "lorem ipsum", "placeholder text", "TBD", "TODO", "FIXME" in UI-facing strings → 🔴 Critical at Dev handoff stage
+  → Flag line number and surrounding component
+
+Terminology consistency:
+  → Collect all nouns used for the same concept across the file
+  → If 2+ different terms are used for the same entity → 🟡 Warning
+    e.g. "workspace" in one component, "project" in another, "team" in a third — all meaning the same thing
+
+Destructive action copy:
+  → Alert/confirm dialogs or delete modal text that reads only "Are you sure?" → 🟡
+    Must name the specific thing being deleted: "Delete 'Project Alpha'? This cannot be undone."
+
+Korean report labels for this category:
+  → 버튼 라벨 동사 누락 / 오류 메시지 비인간적 / 플레이스홀더 = 라벨 중복 /
+     비공식 플레이스홀더 접두사 / 로렘 입숨 발견 / 용어 불일치 / 파괴적 동작 문구 부재
+```

@@ -311,3 +311,18 @@ Physical → Logical property suggestions (flag as 🟢 Tip unless RTL audit act
 
 Upgrade to 🟡 Warning if i18n library is detected or RTL support is requested.
 ```
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 3: Spacing & Layout
+*Full rules + code checks (off-grid detection, padding consistency, z-index table, content margins, RTL logical properties) → `references/spacing.md`*
+
+**→ Widget trigger:** If any off-grid spacing value is found, use the Visualizer to render the **8pt Grid Visualizer** widget. Pre-populate the input with the first offending value found. The widget shows the value on a ruler alongside valid grid neighbours, calculates the snap distance, and pre-colors all common spacing values as on/off-grid. Introduce with one sentence in the user's detected language:
+- English: *"Here's where that value sits on the grid and what to snap it to."*
+- Korean: *"해당 값이 그리드에서 어디에 위치하는지, 어디로 맞춰야 하는지 확인해 보세요."*
+
+---

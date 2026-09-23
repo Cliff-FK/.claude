@@ -252,3 +252,105 @@ Focus ring visibility:
   → Focus managed only via box-shadow (no outline) → 🟡 (Windows High Contrast Mode loses it)
   → Recommended: outline: 2px solid var(--color-focus); outline-offset: 2px → ✅
 ```
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 11: Loading, Empty & Error States
+*The forgotten 30% — most beginner UIs only design the "happy path." Read `references/states.md` for full guidance.*
+
+- [ ] **Loading state** — Every data fetch needs a loading indicator. Skeleton screens preferred over spinners for content-heavy layouts. Never show a blank screen.
+- [ ] **Empty state** — What does an empty list, inbox, or dashboard look like? Should include an illustration or icon, a friendly explanation, and a clear next action ("Create your first task →").
+- [ ] **Error state** — Network failures, server errors, and not-found pages need their own designed state. Not just a console error or blank screen.
+- [ ] **Partial failure** — What if only some data loads? Design for partial states, not just all-or-nothing.
+- [ ] **Success state** — After a form submission or action, confirm it worked. A toast, a green banner, or a state change — something must close the loop.
+- [ ] **Disabled state** — Disabled buttons and inputs should look visually distinct (reduced opacity, no pointer cursor) and ideally explain why they're disabled.
+- [ ] **Consistency** — Loading/empty/error states should match the overall visual style — not be plain browser defaults or unstyled fallbacks.
+
+**→ Widget trigger:** If any missing state is found, always render the **States Coverage Map** widget — even for a single missing state. Pre-populate the grid with the components identified in the audit and mark states as present, missing, or N/A based on what was observed. Mark cells as N/A only when a state genuinely cannot apply to that component (e.g. "Empty" on a Button). Introduce with one sentence in the user's detected language:
+- English: *"Here's the full picture of which states are designed and which are missing."*
+- Korean: *"어떤 상태가 디자인되어 있고 어떤 상태가 빠져 있는지 전체 현황을 확인해 보세요."*
+
+**📋 Code input: direct checks available (run these automatically)**
+```
+Loading state detection:
+  → Search for conditional renders based on loading/isLoading/isPending/isFetching flags
+  → Component fetches data (useEffect + fetch / useQuery / useSWR) with no loading branch → 🔴 Critical
+  → Loading branch renders null or nothing → 🔴 Critical
+  → Loading branch renders a spinner → ✅ (tip: skeleton preferred for content-heavy layouts)
+  → aria-live="polite" or aria-busy="true" absent on dynamically updated regions → 🟡 Warning
+    (screen readers won't announce content updates without aria-live)
+  → Correct: <div aria-live="polite" aria-busy={isLoading}> ... </div>
+
+Empty state detection:
+  → Conditional render for empty array/null data that renders null or nothing → 🔴 Critical
+    "No empty state — users see a blank screen when data is empty"
+  → Empty state renders only a text string with no action → 🟡 Warning
+    "Empty state has no next action — add a CTA or guidance"
+  → Well-formed empty state: icon/illustration + explanation + CTA → ✅
+
+Error state detection:
+  → try/catch or .catch() / isError flag with no error UI branch → 🔴 Critical
+  → Error state renders raw error.message string → 🟡 Warning
+    (technical error messages are not user-friendly — use a human message)
+  → Error state has no retry action → 🟡 Warning
+  → Well-formed error state: friendly message + retry or back action → ✅
+
+Disabled state detection:
+  → <button disabled> with no visual distinction beyond default browser style → 🟡
+  → Disabled button with no tooltip or explanation of why → 🟢 Tip
+  → cursor: not-allowed absent on disabled elements → 🟢 Tip
+
+Success state detection:
+  → Form submit handler with no success feedback (no toast, no banner, no state change) → 🟡
+  → Success message auto-dismisses before user can read it (timeout < 3000ms) → 🟡
+
+Korean report labels for this category:
+  → 로딩 상태 누락 / 빈 상태 누락 / 오류 상태 누락 / 비활성화 상태 스타일 없음 / 성공 피드백 없음
+
+Peak-End Rule:
+  Users judge entire flows by two moments: the emotional peak and the final screen.
+  This makes success/completion states disproportionately important — they are the "end."
+
+  → Check all success/completion screens (form submitted, purchase complete, onboarding done,
+    file uploaded, account created):
+    → Success screen displays only a generic "Done" or "Success" with no detail → 🟡 Warning
+      "The last screen of a flow shapes the user's memory of the whole experience.
+       Add: what was completed, what happens next, and a positive reinforcement signal."
+    → Success screen auto-redirects in < 2000ms before user can read it → 🟡 Warning
+    → Success screen has no positive visual signal (color, icon, illustration, animation) → 🟡
+    → Well-formed success screen: names the completed action + next step + positive visual → ✅
+
+  → Check the "peak" moment — the primary CTA interaction (submit, purchase, confirm):
+    → Button shows no pressed/active state during interaction → 🟡 (no tactile feedback)
+    → No loading state between tap and result → 🟡 (also caught by Cat 11 loading check)
+
+  Korean: 피크-엔드 법칙 — 완료 화면 미흡 / 성공 화면 즉시 리다이렉트 / 시각적 강화 요소 없음
+
+Goal Gradient Theory:
+  People increase effort and motivation as they get closer to completing a goal.
+  Progress indicators that don't communicate proximity to completion miss this effect.
+
+  → Scan for multi-step flows (checkout, onboarding, forms, wizards):
+    → 3+ step flow with no visible step counter or progress bar → 🟡 Warning
+      "No progress signal — users don't know how close they are to done, reducing completion rates."
+    → Progress bar present but always shows the same fill regardless of step → 🔴 Critical
+      (static progress bar is misleading — users expect it to advance)
+    → Step counter says "Step 3" without a total (e.g. "of 5") → 🟡 Warning
+      "Without knowing the total, users can't judge proximity to completion."
+    → Step counter shows "Step 3 of 4" — total visible → ✅
+    → Progress bar fill increases proportionally per step → ✅
+    → Final step visually signals it's the last step (e.g. "Last step", filled bar, changed CTA label) → ✅ strong signal
+
+  → Code checks:
+    → Stepper component without aria-valuenow / aria-valuemax → 🟡 (also Cat 6)
+    → Progress bar with static width value (width: 50% hardcoded, not dynamic) → 🔴
+    → Step counter rendered as plain text with no semantic role (role="status" or aria-live) → 🟡
+
+  Korean: 목표 경사 이론 — 진행 표시 없음 / 정적 진행 바 / 전체 단계 수 미표시
+```
+
+---

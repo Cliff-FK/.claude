@@ -875,3 +875,95 @@ Use this during Cat 18 to ensure all patterns are checked:
 - [ ] No shame or guilt in decline/inactivity copy
 - [ ] Risk language proportionate to actual risk
 - [ ] No emotional manipulation patterns (FOMO engineering, hidden notification counts)
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 18: Ethical Design & Dark Patterns
+*Full rules, all pattern definitions, detection signals, and the ethical persuasion reference → `references/ethics.md`*
+
+This category audits for manipulative or deceptive design patterns — not design mistakes, but intentional choices that may exploit users. Read `references/ethics.md` before running this category.
+
+**When to run:** Always. Every design can be checked for ethical patterns regardless of input type or stage.
+
+**Ethics severity model** (different from standard audit severity):
+| Level | Label | Meaning | Score impact |
+|---|---|---|---|
+| 🔴 | Deceptive | Actively misleads or coerces. Violates user trust, often consumer law. | −15 pts |
+| 🟡 | Questionable | Exploitative depending on context. Warrants review. | −7 pts |
+| 🟢 | Noted | Persuasive element present. Ethical in standard use. | 0 pts |
+
+**Ethics Score** is separate from the Overall Score. Start at 100, apply ethics deductions only.
+Display as: **Ethics Score: X/100** alongside Accessibility Score.
+
+**Detection confidence:** Always declare confidence per finding (High/Medium/Low) using the detection scope table in `references/ethics.md`. Never flag low-confidence patterns without explicit caveat.
+
+**Checklist — run all groups:**
+
+*Group A: Deceptive Interface Patterns*
+- [ ] **Confirmshaming** — Decline/cancel copy does not shame or guilt the user for choosing it
+- [ ] **CTA hierarchy inversion** — Accept and decline actions have equivalent visual weight (especially on consent/cookie screens)
+- [ ] **Trick questions** — All consent copy uses positive, unambiguous language with no double negatives
+- [ ] **Disguised ads** — Sponsored/promoted content is visually distinct from organic content with a clear, readable label
+- [ ] **Bait and switch** — CTA labels accurately describe the immediate next action
+- [ ] **Hidden costs** — All mandatory fees are shown from the first price display
+- [ ] **Visual misdirection** — Cost, commitment, and risk information meets the same visual standards as the CTA it accompanies
+- [ ] **Decoy pricing** — In multi-tier pricing layouts (3+ columns), no tier should be a deliberately inferior option designed only to make another tier look better. Signal: a middle or lower tier that is strictly dominated on every axis (price, features, limits) with no clear use case. Confidence: Medium — flag when detected with caveat. Korean: 디코이 가격 책정 — 의도적으로 열등한 옵션으로 중간 등급을 유도하는 패턴
+
+*Group B: Coercive Flows*
+- [ ] **Roach motel** — Cancellation/exit path is no harder than the sign-up/entry path
+- [ ] **Obstruction** — Unsubscribe, data deletion, and account closure are self-serve and reachable in ≤ 3 steps
+- [ ] **Forced action** — No non-essential data collection or permission is required to access core functionality
+- [ ] **Nagging** — Dismissed prompts stay dismissed; "don't show again" is permanently respected
+
+*Group C: Consent & Privacy*
+- [ ] **Privacy zuckering** — All non-essential data sharing defaults to OFF
+- [ ] **Pre-checked consent** — No marketing/data-sharing checkbox is pre-checked by default
+- [ ] **Interface interference** — Privacy controls use consistent interaction patterns with clear state labels
+- [ ] **Drip pricing** — No fees are revealed only at the final checkout step
+
+*Group D: False Urgency & Scarcity*
+- [ ] **Countdown timers** — Any timer is backed by a real server-side expiry that does not reset
+- [ ] **False scarcity** — Scarcity claims ("Only X left") are backed by real-time inventory data
+- [ ] **False social proof** — Social proof numbers ("X people viewing") reflect real data, not hardcoded or random values
+- [ ] **Manipulative anchoring** — Crossed-out "original" prices, inflated RRP values, or "was/now" displays must reflect a price the product was genuinely sold at. A strikethrough price that was never a real selling price is deceptive anchoring. Code signal: `text-decoration: line-through` or `.original-price` / `.was-price` / `.rrp` adjacent to a current price element. Confidence: Medium — flag for review. Korean: 조작적 앵커링 — 실제로 판매된 적 없는 취소선 가격 또는 부풀린 정가 표시
+
+*Group E: Emotional Manipulation*
+- [ ] **Guilt-based copy** — Inactivity, cancellation, and decline states are addressed neutrally, not shamefully
+- [ ] **Fear appeals** — Risk language is proportionate to actual risk; no exaggerated consequences for conversion
+- [ ] **Toying with emotion** — No patterns that deliberately engineer anxiety, FOMO, or regret as conversion mechanisms
+
+*Group F: Regulatory Compliance Baseline*
+These checks apply across most jurisdictions (EU, US, UK, Canada, Brazil, Australia). They are UI-detectable signals — not a legal audit. Flag as 🚫 Blocker when a legal requirement is clearly absent; 🟡 Warning when the implementation is ambiguous or weak. Always append: *"Verify with legal counsel for your specific jurisdiction and industry."*
+Korean caveat: *"이 항목은 법률 감사가 아닌 UI 신호 감사입니다. 관할 지역 및 산업별 요건은 법률 전문가와 확인하세요."*
+
+- [ ] **Cookie & consent banner** — If cookies beyond strictly necessary are used, a consent banner must be present. Check for: banner presence; "Reject All" / "Decline" option at equal visual prominence to "Accept All" (GDPR, PECR, CCPA requirement — CTA hierarchy inversion here is a 🚫 Blocker); granular consent categories (marketing, analytics, functional) rather than a single all-or-nothing toggle.
+  Code signal: absence of any consent-related class names (`cookie-banner`, `consent-`, `gdpr-`, `cmp-`) or `localStorage`/`sessionStorage` consent keys → 🚫 if cookies are clearly being set.
+  Korean: 쿠키 동의 배너 — "모두 거부" 버튼이 "모두 수락"과 동등한 시각적 비중을 가져야 함
+
+- [ ] **Subscription & auto-renewal disclosure** — Before a subscription purchase is confirmed, the following must be visible: renewal frequency, renewal amount, and cancellation method. A "free trial → paid" conversion must disclose the date and amount of the first charge before the user commits.
+  Code signal: checkout/payment form with no text matching renewal/billing cycle patterns near the CTA → 🟡 Warning.
+  Korean: 구독 자동 갱신 고지 — 결제 확인 전 갱신 주기, 금액, 취소 방법이 명시되어야 함
+
+- [ ] **Privacy at point of collection** — Forms collecting sensitive personal data (email, phone, DOB, national ID, payment, health, location) must include a visible "why we need this" note or a privacy policy link directly at the collection point — not just in the footer.
+  Code signal: `<input type="email/tel/date/number">` inside a form with no adjacent `<a href>` linking to a privacy policy and no inline explanation text → 🟡 Warning.
+  Korean: 수집 시점 개인정보 고지 — 민감 데이터 입력 필드 근처에 수집 목적 또는 개인정보처리방침 링크 필요
+
+- [ ] **Right of withdrawal / cancellation policy** — E-commerce and subscription checkout flows must link to a cancellation or returns policy before the final purchase confirmation. A "Buy Now" or "Confirm Order" CTA with no visible policy link nearby is non-compliant in EU/UK/many US states.
+  Code signal: final checkout CTA (`type="submit"`, "pay now", "confirm order" label patterns) with no adjacent link text matching "cancel", "return", "refund", "withdrawal" → 🟡 Warning.
+  Korean: 청약 철회 / 취소 정책 — 최종 결제 확인 버튼 근처에 취소·환불 정책 링크 필요
+
+- [ ] **Age gate for restricted content** — Products that could be accessed by minors but involve age-restricted content (alcohol, gambling, adult content, financial products in some jurisdictions) must present an age verification mechanism before access. A DOB picker or age confirmation checkbox that can be trivially bypassed (no backend verification) is a weak gate — flag as 🟡.
+  Code signal: presence of age-gated content indicators in route names / class names (`/adults-only`, `age-verify`, `18+`) without a corresponding gate component → 🔴 Critical.
+  Korean: 연령 제한 콘텐츠 연령 확인 — 연령 제한 콘텐츠 접근 전 연령 확인 절차 필요
+
+- [ ] **Accessibility legal baseline** — WCAG 2.1 AA is a legal requirement under: ADA / Section 508 (US), European Accessibility Act (EU — mandatory from June 2025), PSBAR (UK public sector), DDA (Australia), AODA (Canada). Any WCAG AA failure is therefore potentially a legal liability, not just a UX issue. Cat 6 Blocker-tier issues in this audit carry legal weight — do not treat them as optional fixes.
+  Note: if the product is a public-sector website (EU/UK) or a service covered by the EAA, all 🚫 Cat 6 Blockers are legal compliance failures.
+  Korean: 접근성 법적 기준 — WCAG 2.1 AA는 미국(ADA), EU(유럽 접근성법), 영국(PSBAR), 호주(DDA), 캐나다(AODA)에서 법적 의무 사항임
+
+**Before flagging any pattern:** Check the Ethical Persuasion reference in `references/ethics.md`. Do not flag legitimate persuasion techniques (genuine social proof, real urgency, positive progress framing, transparent anchoring).
+
+---

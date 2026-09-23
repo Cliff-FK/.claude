@@ -728,3 +728,36 @@ Correct patterns:
 - [ ] Error messages state what went wrong AND how to fix it / 오류 메시지에 문제점과 해결 방법 모두 포함
 - [ ] Complex or technical fields have contextual tooltips / 복잡한 필드에 상황별 툴팁 있음
 - [ ] Empty states and first-use screens give clear next-step guidance / 빈 상태와 첫 사용 화면에 다음 단계 안내 있음
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 19: Nielsen's Usability Heuristics
+*Full rules, all heuristic definitions, detection signals, and the Usability Score → `references/heuristics.md`*
+
+**Scope:** Audits the 6 heuristics with genuine gaps not covered by existing categories. H4, H5, H8, H9 are already covered by Cat 5, 7, 4, 11/12 respectively — note this in the report but do not re-audit them here.
+
+**When to run:**
+- Always on Full audits
+- Skip on Quick audits unless user specifically requests heuristic review
+- Triggers on: "heuristic review", "Nielsen audit", "usability heuristics", "H1/H2/H6..." etc.
+- Korean triggers: "휴리스틱 검토", "닐슨 감사", "사용성 휴리스틱", "H1/H2/H6 확인"
+
+**Usability Score** is separate from the Overall Score and the Accessibility Score. Start at 100, apply standard deduction tiers. Display as: **Usability Score: X/100**
+
+Scoring bands:
+- **90–100** → Heuristically sound / 사용성 기준 충족
+- **70–89** → Minor usability gaps / 사소한 사용성 문제
+- **50–69** → Significant usability issues / 심각한 사용성 문제
+- **< 50** → Fundamental failures / 근본적인 사용성 실패
+
+**Checklist (H1/H2/H3/H6/H7/H10 gap items, bilingual EN/KO) → `references/heuristics.md` (Quick Reference checklist).**
+
+**Note in report:**
+- English: "H4 (Consistency), H5 (Error Prevention), H8 (Aesthetics), H9 (Error Recovery) are covered by Cat 5, 7, 4, and 11/12 respectively — see those categories for full results."
+- Korean: "H4(일관성), H5(오류 예방), H8(미적 디자인), H9(오류 복구)는 각각 Cat 5, 7, 4, 11/12에서 다룹니다."
+
+---

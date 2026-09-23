@@ -247,3 +247,64 @@ Look for:
 | shadow-none | none | Flat / dark mode |
 
 Mixing Tailwind shadow classes inconsistently across same-type elements → 🟡 Warning.
+
+---
+
+## Checklist d'audit (déplacée depuis SKILL.md)
+
+> Section déplacée telle quelle depuis [SKILL.md](../SKILL.md).
+
+### CATEGORY 14: Elevation & Shadows
+*Full rules → `references/elevation.md`*
+
+- [ ] **Shadow scale** — Shadows should come from a defined scale (e.g. sm, md, lg, xl) — not arbitrary values. Each level should be used consistently for the same type of element.
+- [ ] **Shadow = elevation** — Shadows communicate how high above the page an element floats. Cards sit low (subtle shadow), modals sit high (strong shadow), tooltips highest. Check the hierarchy makes sense.
+- [ ] **Shadow color** — Shadows should use a dark, slightly saturated color (e.g. `rgba(0,0,0,0.08)`) — never pure black. On colored backgrounds, tint the shadow with the surface color.
+- [ ] **No shadows in dark mode** — Shadows are invisible on dark backgrounds. Use lighter surface colors for elevation instead (e.g. a card is slightly lighter gray than the page background).
+- [ ] **No decorative shadows** — Shadows should only appear on elevated elements. Don't use shadows purely for decoration or emphasis on flat elements.
+- [ ] **Consistent blur & offset** — A consistent offset-to-blur ratio (e.g. offset-y = 1/3 of blur) makes shadows feel physically grounded. Mismatched values look amateur.
+- [ ] **Multiple light sources** — Don't combine a top-shadow and a bottom-shadow on the same element unless intentional. Pick one light source direction and stick to it.
+
+**📋 Code input: direct checks available (run these automatically)**
+```
+box-shadow value audit:
+  → Collect all box-shadow declarations across CSS/styled-components/Tailwind
+  → Arbitrary shadow values not matching a defined scale → 🟡 Warning
+    ❌ box-shadow: 0 3px 7px rgba(0,0,0,0.11) — arbitrary, not from a scale
+    ✅ box-shadow: var(--shadow-md) or Tailwind shadow-md
+  → More than 3 distinct box-shadow values used for the same element type (e.g. cards) → 🟡
+    "Cards use 4 different shadow values — establish a shadow scale"
+
+Shadow color audit:
+  → box-shadow using pure black rgba(0,0,0,1) or #000000 → 🟡 Warning
+    "Pure black shadows look heavy — use rgba(0,0,0,0.08–0.20) for natural depth"
+  → box-shadow using an opaque color (no alpha channel) → 🟡
+  → On colored surfaces: shadow color should be tinted with the surface color, not neutral black → 🟢 Tip
+
+Elevation hierarchy check:
+  → Collect elements by type: cards, modals, dropdowns, tooltips, sticky headers
+  → Compare their shadow values — higher elements must have stronger shadows
+  → Modal shadow ≤ card shadow → 🟡 Warning (elevation hierarchy inverted)
+  → Tooltip shadow ≤ modal shadow → 🟡
+
+Multiple shadows on same element:
+  → Element with both a top and bottom box-shadow without clear design intent → 🟡
+  → More than 2 box-shadow layers on a single element → 🟡
+
+Dark mode shadow check:
+  → box-shadow retained in dark mode without override → 🟡 Warning
+    "Shadows are invisible on dark backgrounds — use a lighter surface color for elevation instead"
+  → Correct pattern: @media (prefers-color-scheme: dark) { box-shadow: none; background: [elevated-surface-color]; }
+  → Tailwind: dark:shadow-none present → ✅
+
+Blur-to-offset ratio:
+  → Extract offset-y and blur-radius from each box-shadow
+  → offset-y > blur-radius (e.g. 0 8px 4px) → 🟢 Tip (offset larger than blur looks unnatural)
+  → Recommended ratio: blur = 2–3× offset-y
+
+Korean report labels for this category:
+  → 그림자 스케일 미준수 / 순수 검정 그림자 사용 / 높낮이 계층 역전 /
+     다크 모드에서 그림자 미제거 / 블러-오프셋 비율 부적절
+```
+
+---
