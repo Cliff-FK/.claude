@@ -2043,6 +2043,9 @@ function wd_walk( WdReport $R, string $root, array &$ctx ): array {
 		$subs = [];
 		foreach ( $entries as $e ) {
 			$p = $dir . '/' . $e;
+			if ( isset( $ctx['exclude'][ wd_norm( $p ) ] ) ) {
+				continue;
+			}
 			if ( is_link( $p ) ) {
 				$target = readlink( $p );
 				$real   = realpath( $p );
@@ -2069,6 +2072,22 @@ function wd_walk( WdReport $R, string $root, array &$ctx ): array {
 		}
 	}
 	return $files;
+}
+/** Chemins exclus du parcours (l'outil déposé et son dossier de travail) : annoncés dans le rapport, jamais silencieux. */
+function wd_excludes( WdReport $R, array $opt ): array {
+	$out = [];
+	foreach ( (array) ( $opt['exclude'] ?? [] ) as $list ) {
+		foreach ( explode( ',', (string) $list ) as $p ) {
+			$real = realpath( trim( $p ) );
+			if ( $real !== false ) {
+				$out[ wd_norm( $real ) ] = true;
+			}
+		}
+	}
+	if ( $out ) {
+		$R->contexte['exclus'] = array_keys( $out );
+	}
+	return $out;
 }
 function wd_rel( string $root, string $path ): string {
 	$p = wd_norm( $path );
@@ -2126,6 +2145,7 @@ function wd_scan_prepare( WdReport $R, string $root, array $opt, array &$ctx ): 
 	$ctx['flagged']         = [];
 	$ctx['db_exec']         = [];
 	$ctx['code_complete']   = false;
+	$ctx['exclude']         = wd_excludes( $R, $opt );
 	$vp  = $root . '/wp-includes/version.php';
 	$ver = is_file( $vp ) ? (string) wd_read( $R, $vp ) : '';
 	$ctx['wp_version'] = preg_match( '/\$wp_version\s*=\s*[\'"]([^\'"]+)/', $ver, $m ) ? $m[1] : '';
@@ -3878,6 +3898,7 @@ Options :
   --format=text|json    sortie standard (défaut text)
   --offset=N --max-seconds=S   analyse découpée et reprenable
   --max-file-size=OCTETS       plafond d'analyse par fichier PHP (défaut 8 Mo)
+  --exclude=CHEMIN,…    chemins absolus à ne pas parcourir (listés dans le rapport)
 Code retour : 2 si CONFIRMÉ, 1 sinon, 3 erreur fatale.
 TXT;
 }

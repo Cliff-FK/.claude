@@ -10,7 +10,7 @@
   "expected_behavior": [
     "Dit qu'AUCUNE API native ne fait ça (bug Gutenberg #55469 ; Block Locking API = blocs déjà insérés, pas un aperçu inserter)",
     "Redirige vers registerBlockVariation scope:['inserter'] + Placeholder d'upsell dans edit(), ou bloc absent tant que le Pro n'est pas installé",
-    "Gating réel délégué à la plateforme de licence du projet (si Freemius : can_use_premium_code(), pas is_paying())"
+    "Gating réel délégué à la plateforme de licence du projet (gater sur le droit d'usage effectif de la licence, pas sur un statut « a payé un jour »)"
   ]
 }
 ```

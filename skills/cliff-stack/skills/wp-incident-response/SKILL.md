@@ -37,7 +37,7 @@ Le cas d'école a été traité **sans SSH**, par script PHP déposé. Choisir s
 
 - **A. SSH** (idéal) : `php detect.php --root=DOCROOT --url=https://site --access-log=…`.
 - **B'. Tâche planifiée du panneau en PHP CLI** (préféré sans SSH) : planifier `php detect.php --root=… --json=/hors/docroot/rapport.json`, récupérer le JSON par FTP. Pas de limite de temps HTTP, pas d'auto-exposition.
-- **B. Script HTTP durci** (si ni SSH ni tâche CLI) : déposer `detect.php`, renseigner `WD_HTTP_TOKEN` (≥32 car.) et `WD_HTTP_EXPIRES`, appeler en POST avec l'en-tête `X-Detect-Token`. `register_shutdown_function(unlink)` s'auto-supprime dès le chargement ; aucune capacité destructive. Découpe par `--offset`/`--max-seconds`.
+- **B. Outil web déposé** (si ni SSH ni tâche CLI) : `php scripts/build-drop.php --out=/hors/depot/nom.php --token-out=FICHIER` génère UN fichier (détecteur + actions + interface) à poser par FTP à la racine. Accès par jeton (seule son empreinte est dans le fichier ; `--token-out` quand un agent lance le build, pour qu'aucun secret ne passe par le chat), expiration codée, autodestruction à l'expiration ou après 10 jetons faux. Analyse par étapes, puis **seulement les actions que les constats justifient**, chacune avec aperçu, validation élément par élément, sauvegarde, journal et annulation ; bouton final « Terminer et supprimer l'outil ». `detect.php` seul répond 404 par le web.
 - **C. Hors ligne** : copier fichiers + dump, `php detect.php --root=COPIE --sql=dump.sql --offline`. Les contrôles système (processus, cron, /tmp) sont alors `NEEDS_HUMAN` (ils se font sur le serveur).
 
 Périmètre = **l'abonnement entier / l'utilisateur système** : `--scope=RACINE_ABONNEMENT` analyse chaque installation trouvée (recettes, `*.old`, bases). Prouvé par le cas d'école : la recette était infectée, la prod saine. Un ancien docroot partage l'utilisateur système, donc l'exposition.
@@ -77,7 +77,7 @@ Pièges de terrain qui produisent des faux positifs, et pourquoi le détecteur n
 
 ## Tests
 
-`tests/` (lancer sur PHP 7.4 ET 8.x) : `unit.php` (logique : décodage, parseur ps, analyse statique « aucun include du site »), `mutations.php` (mutations synthétiques générées au test, dont un cas différentiel **pur** sans aucun motif connu). Un test d'acceptation sur un cas réel vit **avec les données du client, hors de la skill**, et charge `tests/lib.php`. Voir [references/testing.md](references/testing.md).
+`tests/` (lancer sur PHP 7.4 ET 8.x) : `unit.php` (logique : décodage, parseur ps, analyse statique « aucun include du site », et pour l'outil déposé : aucune inclusion, aucune exécution de commande), `mutations.php` (mutations synthétiques générées au test, dont un cas différentiel **pur** sans aucun motif connu). Un test d'acceptation sur un cas réel vit **avec les données du client, hors de la skill**, et charge `tests/lib.php`. Voir [references/testing.md](references/testing.md).
 
 ## Anti-patterns
 

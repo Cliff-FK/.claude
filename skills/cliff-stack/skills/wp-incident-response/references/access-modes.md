@@ -23,15 +23,17 @@ Le cas d'école a été traité sans SSH. Quand le panneau permet une tâche pla
    `php /chemin/detect.php --root=/chemin/docroot --json=/hors/docroot/rapport-$(date +%s).json`
 3. Récupérer le JSON par FTP, supprimer le script.
 
-## B. Script HTTP durci (ni SSH ni tâche CLI)
+## B. Outil web déposé (ni SSH ni tâche CLI)
 
-En dernier recours. Le script s'appelle par le web, protégé et jetable (invariant I2) :
+En dernier recours. `detect.php` seul répond 404 par le web ; on génère un outil jetable :
 
-1. Éditer en tête de `detect.php` : `WD_HTTP_TOKEN` (≥ 32 caractères aléatoires) et `WD_HTTP_EXPIRES` (horodatage Unix d'expiration, quelques heures). Sans ces deux valeurs, le script **refuse** de s'exécuter en HTTP.
-2. Déposer par FTP. Le nom doit passer un éventuel verrou `.htaccess` par liste blanche : sinon le retirer d'abord (chirurgical).
-3. Appeler en **POST** avec l'en-tête `X-Detect-Token: <jeton>` (ou le champ POST `token`). Paramètres utiles en POST : `since`, `legit-admins`, `url`, `access-log`, `offset`, `max-seconds`, `watch`, `prefix`, `scope`.
-4. Le script pose `register_shutdown_function(unlink)` **dès le chargement** : il s'auto-supprime même en cas d'erreur. Aucune capacité destructive en mode diagnostic.
-5. Gros site : découper avec `--offset`/`--max-seconds`, relancer à l'offset rendu (le rapport le donne). `max_execution_time` est lu et respecté.
+1. `php scripts/build-drop.php --out=/hors/depot/nom.php [--hours=4] [--token-out=FICHIER]`. Le fichier assemble le détecteur, `drop/actions.php` et `drop/app.php` ; il ne contient que l'empreinte sha256 du jeton et une expiration codée. Quand un agent lance le build, `--token-out` : le jeton ne passe jamais par le chat.
+2. Déposer par FTP à la racine du projet. Le nom doit passer un éventuel verrou `.htaccess` par liste blanche : sinon le retirer d'abord (chirurgical).
+3. Ouvrir l'adresse, saisir le jeton (POST). Session propre (cookie HttpOnly, SameSite=Strict, Secure en HTTPS, 30 min d'inactivité), CSRF sur chaque POST. Expiré ou 10 jetons faux : le fichier se supprime.
+4. Analyse par étapes (reprise automatique sous `max_execution_time`), en lecture seule. Le fichier et son dossier de travail sont exclus (`--exclude`, annoncé dans le rapport).
+5. Actions proposées **seulement si un constat les justifie** : quarantaine, remplacement d'un fichier du cœur par l'archive officielle vérifiée contre le manifeste, retrait de lignes précises d'un `.htaccess`/`.user.ini`, suppression de lignes de base (options vitales jamais proposées), neutralisation de comptes, révocation de mots de passe d'application, déconnexion générale, invalidation des mots de passe (au moins un compte conservé), régénération des clés. Rien n'est coché par défaut ; le navigateur ne transmet que des clés du plan serveur. Refus si la cible a changé depuis l'analyse (signe de réécriture).
+6. Chaque action : sauvegarde, journal, annulation (refusée si la cible a encore changé depuis).
+7. Dossier de travail (état, sauvegardes, quarantaine, journal) hors de la racine servie quand le parent est inscriptible, sinon dans la racine sous un nom imprévisible fermé par `.htaccess` (sous nginx, seul le nom imprévisible protège). Le récupérer par FTP, puis « Terminer et supprimer l'outil ».
 
 Limites HTTP fréquentes : `open_basedir`, `shell_exec` coupé, `/proc` masqué → les contrôles concernés passent `ILLISIBLE`/`NEEDS_HUMAN`, jamais « ok ».
 

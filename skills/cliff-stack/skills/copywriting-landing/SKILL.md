@@ -7,7 +7,7 @@ description: "Rédige et structure le MESSAGE d'une page de vente qui convertit 
 
 > **Langue : réponds toujours en français** (accents complets). Termes techniques (hero, above-the-fold, CTA, framework…) inchangés.
 
-Produire le **message** d'une page de vente pour un produit de code (plugin WP, thème, SaaS prosumer/B2B). Ce skill rédige et structure le **copy** ; il ne dessine pas le rendu (→ [[design-auditor]] audite l'UI/a11y/dark patterns) et ne fixe pas les prix (→ [[pricing-strategist]]). Les biais qui sous-tendent le copy = [[marketing-psychology]] (catalogue). Pour un produit Freemius / freemium, la mécanique d'offre = [[freemius]].
+Produire le **message** d'une page de vente pour un produit de code (plugin WP, thème, SaaS prosumer/B2B). Ce skill rédige et structure le **copy** ; il ne dessine pas le rendu (→ [[design-auditor]] audite l'UI/a11y/dark patterns) et ne fixe pas les prix (→ [[pricing-strategist]]). Les biais qui sous-tendent le copy = [[marketing-psychology]] (catalogue). Pour un produit freemium, la mécanique d'offre (trial, coupons, relances) relève de la plateforme de facturation/licence du projet.
 
 > **RÈGLE NON NÉGOCIABLE — recherche audience AVANT framework.** 60-80 % d'une bonne page = connaître l'audience (le job-to-be-done, le niveau de conscience du problème, l'objection #1, le vocabulaire réel). Le framework n'est qu'un squelette. Sans données audience, **demander** (ou lire `.claude/product-marketing-context.md` s'il existe) — ne jamais générer une page « générique ».
 

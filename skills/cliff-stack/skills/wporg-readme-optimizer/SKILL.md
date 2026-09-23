@@ -1,6 +1,6 @@
 ---
 name: wporg-readme-optimizer
-description: "Optimizes a WordPress plugin's listing in the WordPress.org plugin directory's INTERNAL search engine (directory/ASO-like SEO for the wordpress.org repo) — readme.txt, plugin title, tags, short description, 'Tested up to', ratings/reviews and support resolution. Audits keyword coverage per target query against the real Elasticsearch ranking formula, scores gaps, and produces an optimized readme.txt diff plus a reviews/support action plan. Use when asked to optimize/audit a plugin readme.txt, rank higher in the wordpress.org plugin search/repo, do the 'WordPress.org SEO' / directory SEO of a plugin, improve plugin discoverability on the WordPress.org directory, choose plugin tags, write the plugin title/short description for the repo, 'why does my plugin not show up in WordPress.org search', or 'why is my plugin ranked low in the plugin search even though it has more installs than competitors'. STRICTLY scoped to the WordPress.org directory listing — NOT Google/web SEO (use seo-launch), NOT pricing/licensing/Freemius monetization (use pricing-strategist/freemius), NOT plugin PHP/JS code (use wp-native), NOT the repo-compliance gate (use wp-plugin-check)."
+description: "Optimizes a WordPress plugin's listing in the WordPress.org plugin directory's INTERNAL search engine (directory/ASO-like SEO for the wordpress.org repo) — readme.txt, plugin title, tags, short description, 'Tested up to', ratings/reviews and support resolution. Audits keyword coverage per target query against the real Elasticsearch ranking formula, scores gaps, and produces an optimized readme.txt diff plus a reviews/support action plan. Use when asked to optimize/audit a plugin readme.txt, rank higher in the wordpress.org plugin search/repo, do the 'WordPress.org SEO' / directory SEO of a plugin, improve plugin discoverability on the WordPress.org directory, choose plugin tags, write the plugin title/short description for the repo, 'why does my plugin not show up in WordPress.org search', or 'why is my plugin ranked low in the plugin search even though it has more installs than competitors'. STRICTLY scoped to the WordPress.org directory listing — NOT Google/web SEO (use seo-launch), NOT pricing/licensing/monetization (use pricing-strategist), NOT plugin PHP/JS code (use wp-native), NOT the repo-compliance gate (use wp-plugin-check)."
 ---
 
 # wporg-readme-optimizer — classer un plugin dans le moteur de recherche du dépôt WordPress.org
@@ -13,7 +13,7 @@ Optimise la **fiche d'un plugin sur le dépôt WordPress.org** pour son classeme
 
 Ce skill traite **exclusivement le répertoire WordPress.org**. Il ne touche ni à ces domaines, ni n'y fait référence comme à des leviers ; il **renvoie** :
 - **SEO web / Google / AEO** (ranker sur Google, schema, backlinks, contenu de blog) → `[[seo-launch]]`.
-- **Pricing, licences, plans, Freemius, monétisation** → `[[pricing-strategist]]` / `[[freemius]]`.
+- **Pricing, licences, plans, monétisation** → `[[pricing-strategist]]`.
 - **Code du plugin (PHP/JS, blocs, hooks), header de plugin dans le `.php`** → `[[wp-native]]`.
 - **Conformité du plugin pour le repo (Plugin Check, sécurité, i18n)** → `[[wp-plugin-check]]`.
 Si la demande sort du périmètre repo, le dire et pointer le bon skill — ne pas improviser hors couloir.

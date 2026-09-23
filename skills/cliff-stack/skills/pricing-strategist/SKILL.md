@@ -32,7 +32,7 @@ The skill recommends **a model and a range**. The human picks the number, owns t
 - You suspect your packaging has anti-patterns (decoy tier, feature dump, no upgrade trigger)
 
 **Do not use for:**
-- The Freemius billing/coupon/dunning wiring once a model is chosen → `freemius`
+- The billing/coupon/dunning wiring once a model is chosen → the project's billing/licensing platform
 - The behavioral framing layer of a chosen tier (charm/decoy/anchoring) → `marketing-psychology`
 - Writing the pricing-page copy itself → `copywriting-landing`
 - The in-editor free→pro upsell placement → `in-product-upgrade-prompts`
@@ -78,7 +78,7 @@ cd commercial/skills/pricing-strategist && python3 scripts/pricing_model_picker.
 
 ## References
 
-- `references/wordpress_plugin_licensing.md` — WP-specific layer: site-count value metric, lifetime 3–5× (and the lifetime+unlimited trap), discount-first-payment, grandfathering, verified numbers + source-bias flags. **Read this when pricing a WordPress plugin/theme** (Freemius or self-hosted).
+- `references/wordpress_plugin_licensing.md` — WP-specific layer: site-count value metric, lifetime 3–5× (and the lifetime+unlimited trap), discount-first-payment, grandfathering, verified numbers + source-bias flags. **Read this when pricing a WordPress plugin/theme** (hosted billing platform or self-hosted).
 - `references/saas_pricing_canon.md` — Skok, Tunguz, Campbell, Ramanujam, BVP, Shevlin, Stanford GSB
 - `references/van_westendorp_methodology.md` — original 1976 paper, NMS refinement, Conjoint.ly, Sawtooth, ESOMAR, Lipovetsky, Decision Analyst
 - `references/packaging_anti_patterns.md` — ProfitWell, OpenView, BVP vertical SaaS, Ramanujam, Poyar, SaaS Capital
@@ -104,7 +104,7 @@ cd commercial/skills/pricing-strategist && python3 scripts/pricing_model_picker.
 
 ## Distinct from
 
-- **freemius** — implements the chosen model in the billing platform (plans, coupons, trials, dunning, multi-currency). Pricing-strategist decides the menu; freemius wires it.
+- **the project's billing/licensing platform** implements the chosen model (plans, coupons, trials, dunning, multi-currency). Pricing-strategist decides the menu; the platform wires it.
 - **marketing-psychology** — supplies the buyer-behavior lens (charm/decoy/anchoring) applied to tiers that already exist. Pricing-strategist designs the tiers first.
 - **copywriting-landing** — writes the pricing-page message. Pricing-strategist sets the numbers and packaging the page then sells.
 - **in-product-upgrade-prompts** — the in-editor upsell moment for a free→pro plugin. Consumes the tier design as input.

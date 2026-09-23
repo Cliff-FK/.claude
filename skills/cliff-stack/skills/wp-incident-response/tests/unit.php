@@ -88,4 +88,19 @@ T::ok( 'U11b .local reconnu, gmail.com non', preg_match( WD_RESERVED_DOMAIN, 'x.
 /* --- Entropie : littéral aléatoire vs texte --- */
 T::ok( 'U12 entropie discrimine aléatoire vs texte', wd_entropy( 'aZ9kQ2mB7xR4pL6vT8wN3cF5dH1jY0sG' ) > wd_entropy( 'the quick brown fox jumps over' ) );
 
+/* --- Outil déposé : aucune inclusion, aucune exécution de commande, aucun hôte hors API officielles --- */
+foreach ( [ 'actions.php', 'app.php' ] as $f ) {
+	$code  = (string) file_get_contents( dirname( __DIR__ ) . '/scripts/drop/' . $f );
+	$found = [];
+	foreach ( token_get_all( $code ) as $t ) {
+		if ( is_array( $t ) && ( in_array( $t[0], [ T_INCLUDE, T_INCLUDE_ONCE, T_REQUIRE, T_REQUIRE_ONCE, T_EVAL ], true ) || ( $t[0] === T_STRING && in_array( strtolower( $t[1] ), [ 'exec', 'shell_exec', 'system', 'passthru', 'popen', 'proc_open', 'pcntl_exec', 'assert' ], true ) ) ) ) {
+			$found[] = 'L' . $t[2] . ' ' . $t[1];
+		}
+	}
+	T::ok( 'U13 drop/' . $f . ' sans inclusion ni exécution de commande', ! $found, implode( ' ; ', $found ) );
+	preg_match_all( '#https?://([a-z0-9.-]+)#i', $code, $mm );
+	$foreign = array_values( array_diff( array_unique( array_map( 'strtolower', $mm[1] ) ), [ 'api.wordpress.org', 'downloads.wordpress.org' ] ) );
+	T::ok( 'U13b drop/' . $f . ' sans hôte externe hors API officielles', ! $foreign, implode( ',', $foreign ) );
+}
+
 exit( T::end() );

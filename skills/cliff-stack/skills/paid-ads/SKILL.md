@@ -7,11 +7,11 @@ description: "Produit le PLAN d'acquisition payante pour vendre un produit logic
 
 > **Langue : réponds toujours en français** (accents complets). Termes techniques (Smart Bidding, PMax, RSA, Consent Mode, tCPA…) inchangés.
 
-Produit un **plan** d'acquisition payante : canal, structure de compte, angles créa, plan budget/enchères, framework de mesure. Complémentaire : [[seo-launch]] (organique long terme), [[copywriting-landing]] (la landing qui reçoit le clic), [[pricing-strategist]] (LTV/prix), [[freemius]] (revenu réel pour la mesure).
+Produit un **plan** d'acquisition payante : canal, structure de compte, angles créa, plan budget/enchères, framework de mesure. Complémentaire : [[seo-launch]] (organique long terme), [[copywriting-landing]] (la landing qui reçoit le clic), [[pricing-strategist]] (LTV/prix), la plateforme de facturation du projet (revenu réel pour la mesure).
 
 > **PÉRIMÈTRE — un plan, pas un pilotage.** Ce skill ne lance ni n'optimise une campagne live (budget réel, Ads Manager, data de compte = hors de portée d'un LLM). Il produit : structure de compte, angles créa, plan budget/enchères, framework de mesure. Être explicite sur cette limite avec l'utilisateur.
 
-> **RÈGLE NON NÉGOCIABLE — dire quand le paid est un PIÈGE.** Le paid **amplifie** une proposition de valeur qui marche déjà ; il ne la crée pas. Avant tout plan, vérifier l'unit economics (§0). Si le profil ne tient pas, **déconseiller le paid** et renvoyer vers [[seo-launch]] / communauté / wordpress.org / affiliation Freemius — ne pas produire un plan qui brûlera un budget modeste à vide.
+> **RÈGLE NON NÉGOCIABLE — dire quand le paid est un PIÈGE.** Le paid **amplifie** une proposition de valeur qui marche déjà ; il ne la crée pas. Avant tout plan, vérifier l'unit economics (§0). Si le profil ne tient pas, **déconseiller le paid** et renvoyer vers [[seo-launch]] / communauté / wordpress.org / programme d'affiliation, ne pas produire un plan qui brûlera un budget modeste à vide.
 
 ## 0. Gate AVANT tout plan — le paid a-t-il du sens ?
 Déconseiller le paid si l'un de ces signaux est présent :
@@ -52,7 +52,7 @@ Hiérarchie pour solo/petit budget :
 ## 5. Mesure — ROAS / CAC / attribution cookieless
 - **Consent Mode v2 obligatoire UE/UK** (mars 2024) : sans lui, pas de retargeting ni de tracking conversion EEE, et illégal. **Prérequis avant de lancer.**
 - Stack 2026 : **Consent Mode v2 + Enhanced Conversions + server-side tagging (GTM serveur)**. Récupère ~30-50 % des conversions perdues (le « modélisé » reste une **estimation**).
-- ⚠️ **Ne pas croire le ROAS in-platform** : 60-70 % des users non trackés post-iOS14, last-click trompeur. **Croiser avec le revenu réel** ([[freemius]]/Stripe via import offline conversions) et raisonner **unit economics** (LTV:CAC, payback), pas coût-par-lead.
+- ⚠️ **Ne pas croire le ROAS in-platform** : 60-70 % des users non trackés post-iOS14, last-click trompeur. **Croiser avec le revenu réel** (ventes réelles de la plateforme de facturation via import offline conversions) et raisonner **unit economics** (LTV:CAC, payback), pas coût-par-lead.
 - Détail : `references/measurement.md`.
 
 ## 6. Quand le paid a du sens (une fois le gate §0 passé)
