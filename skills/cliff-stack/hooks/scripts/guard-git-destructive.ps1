@@ -87,8 +87,7 @@ try {
     }
 
     if ($blockedReason) {
-        # Décision « ask » : l'invite de permission du harnais recueille l'accord humain.
-        # Remplace l'ancienne sentinelle, qui était écrite par le modèle lui-même.
+        # « ask » : l'accord vient de l'invite de permission du harnais, jamais d'un fichier écrit par le modèle.
         @{
             hookSpecificOutput = @{
                 hookEventName            = 'PreToolUse'

@@ -1,6 +1,6 @@
 ---
 name: wp-incident-response
-description: Use when a WordPress site is hacked, compromised, infected or defaced ("site WordPress piraté/hacké/infecté", "malware WordPress", "site nettoyé qui se réinfecte"), shows SEO spam or redirects to spam for Google visitors ("redirige vers du spam", "spam SEO", "cloaking"), has unknown or fake admin accounts ("des admins inconnus", "80 comptes administrateurs"), backdoors/webshells, a host or scanner flag, or needs a post-breach desinfection without SSH (panel + FTP, dropped PHP script) or offline (SQL dump + files), AND when WordPress or plugin updates are stuck/blocked/impossible ("les mises à jour ne se font plus", "impossible de mettre à jour", "auto-update désactivé"). Read-only investigation first, then guided containment, cleanup, secret rotation, hardening and verification. NOT for building a WordPress feature (wp-native), NOT for the sellable-plugin compliance gate (wp-plugin-check).
+description: Use when a WordPress site is hacked, compromised, infected or defaced ("site WordPress piraté/hacké/infecté", "malware WordPress", "site nettoyé qui se réinfecte"), shows SEO spam or redirects to spam for Google visitors ("redirige vers du spam", "spam SEO", "cloaking"), has unknown or fake admin accounts ("des admins inconnus", "80 comptes administrateurs"), backdoors/webshells, a host or scanner flag, or needs a post-breach desinfection without SSH (panel + FTP, dropped PHP script) or offline (SQL dump + files), AND when WordPress or plugin updates are stuck/blocked/impossible ("les mises à jour ne se font plus", "auto-update désactivé"). Read-only investigation first, then guided containment, cleanup, secret rotation, hardening and verification. NOT for building a WordPress feature (wp-native) nor the sellable-plugin compliance gate (wp-plugin-check).
 license: Skill maison. Le détecteur réutilise la méthode en phases de wp-malware-cleanup (panstemon, MIT) réécrite en invariants génériques.
 ---
 
@@ -77,7 +77,7 @@ Pièges de terrain qui produisent des faux positifs, et pourquoi le détecteur n
 
 ## Tests
 
-`tests/` (lancer sur PHP 7.4 ET 8.x) : `unit.php` (logique : décodage, parseur ps, analyse statique « aucun include du site »), `mutations.php` (mutations synthétiques générées au test, dont un cas différentiel **pur** sans aucun motif connu), `acceptance-case.php` (cas d'école réel, copie fraîche vérifiée par hash, lecture seule ; les noms propres du cas ne vivent que dans ce fichier de test). Voir [references/testing.md](references/testing.md).
+`tests/` (lancer sur PHP 7.4 ET 8.x) : `unit.php` (logique : décodage, parseur ps, analyse statique « aucun include du site »), `mutations.php` (mutations synthétiques générées au test, dont un cas différentiel **pur** sans aucun motif connu). Un test d'acceptation sur un cas réel vit **avec les données du client, hors de la skill**, et charge `tests/lib.php`. Voir [references/testing.md](references/testing.md).
 
 ## Anti-patterns
 
