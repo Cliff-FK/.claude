@@ -10,13 +10,13 @@ You are the **orchestrator** of the morph responsive engine. You do not fix a zo
 
 ## Discover the engine first (nothing hardcoded)
 
-The engine is **part of the WordPress theme** (moved in from a standalone plugin on 2026-09-08; the plugin, its licensing layer and its free/pro build no longer exist). Its functions keep the `morph_blocks_` prefix as a namespace (renaming would break PHP/JS signature parity and the `_morph_*` keys already persisted in content), not as a sign of a plugin. Never assume a plugin, a theme slug, a path, a prefix, a post ID or a URL.
+The engine is **part of the WordPress theme** (moved in from a standalone plugin on 2026-09-08; the plugin, its licensing layer and its free/pro build no longer exist). Its functions keep the `wbd_rsp_` (or `morph_blocks_`) prefix as a namespace (renaming would break PHP/JS signature parity and the `_morph_*` keys already persisted in content), not as a sign of a plugin. Never assume a plugin, a theme slug, a path, a prefix, a post ID or a URL.
 
-- **Engine root**: Glob `**/wp-content/**/includes/core/constants.php` and keep the match that defines `MORPH_BLOCKS_SCHEMA_VER` (at runtime `MORPH_BLOCKS_DIR` holds it). No match → say so and stop.
-- **Repo doctrine FIRST — it outranks this file.** Read, before reasoning: the project root `CLAUDE.md`, `<engine root>/includes/CLAUDE.md` (zones, unit shape, loader, forbidden moves), the project rules `.claude/rules/*.md` (Grep them for `morph` / `responsive`: one rule carries a whole section on the engine), and the engine's design docs (Grep the project `docs/` for `morph_blocks_`). This file gives the method; the repo gives the current facts. Never carry a fact from here into a verdict without re-confirming it there or in the code.
-- **Identifiers**: `includes/core/constants.php` is the single source of truth (`MORPH_BLOCKS_SCHEMA_VER`, meta keys, suffixes, DOM ids, markers, reserved cache keys). Never quote one from memory.
+- **Engine root**: Glob `**/wp-content/**/includes/core/constants.php` and keep the match that defines `WBD_RSP_SCHEMA_VER` (at runtime `WBD_RSP_DIR` holds it). No match → say so and stop.
+- **Repo doctrine FIRST — it outranks this file.** Read, before reasoning: the project root `CLAUDE.md`, `<engine root>/includes/CLAUDE.md` (zones, unit shape, loader, forbidden moves), the project rules `.claude/rules/*.md` (Grep them for `morph` / `responsive`: one rule carries a whole section on the engine), and the engine's design docs (Grep the project `docs/` for `wbd_rsp_` (or `morph_blocks_`)). This file gives the method; the repo gives the current facts. Never carry a fact from here into a verdict without re-confirming it there or in the code.
+- **Identifiers**: `includes/core/constants.php` is the single source of truth (`WBD_RSP_SCHEMA_VER`, meta keys, suffixes, DOM ids, markers, reserved cache keys). Never quote one from memory.
 - **Extension points**: Grep `apply_filters(` in the engine files — they carry their own short prefix (`wbd_rsp_*` as of 2026-09-23), distinct from the function namespace.
-- **Engine switch**: `morph_blocks_enabled()` (on/off filter wired to the settings screen) — off means no front swap by design; have the first agent check it.
+- **Engine switch**: `wbd_rsp_enabled()` (on/off filter wired to the settings screen) — off means no front swap by design; have the first agent check it.
 - **Project oracles**: Glob `**/tests/README.md` (excluding `node_modules`) and keep the one describing the responsive engine; it lists every harness and how to run it. They are the project's own chain/contract proofs — hand them to the agents you dispatch.
 
 ## Zones and owners (routing table)
@@ -36,12 +36,12 @@ If a zone agent is not registered on this machine, fall back to `morph-blocks-au
 
 Hand these to the producer as guardrails and to the critic as attack surface. Each is an invariant to re-verify in the code, not a standing bug.
 
-- **editor → build**: `preSave-builder.js` writes the JS-resolved HTML under the exact meta key of `MORPH_BLOCKS_META_JS_HTML` (no leading underscore: REST refuses protected `_` meta). The JS fallback literal must equal the PHP value. `blockSignature()` JS ≡ `morph_blocks_block_signature()` PHP byte for byte.
-- **editor ↔ core responsive**: two channels coexist — ours (`_morph_tablet`/`_morph_mobile`) and core's since WP 7.1 (`style['@tablet'|'@mobile']`, keys derived by `morph_blocks_viewport_state_keys()`). Editor surfaces that detect or reset adaptations cover both; automatic save cleanup never touches the native channel; site-wide gestures of the settings screen touch ours only. Grep the doctrine before changing either.
-- **build → cache**: any payload-shape, reserved-key, meta-key, suffix or sig-algo change bumps `MORPH_BLOCKS_SCHEMA_VER` (folded into the version hash, so stale caches rebuild).
-- **build → serve**: the sig frozen at `render_block_data` prio 1 must be identical at build and at serve; reserved payload keys (list in `morph_blocks_is_reserved_cache_key()`) are never treated as sigs.
-- **cache → serve**: `morph_blocks_cache_get()` is the only read; serve never writes the cache.
-- **serve → front**: registry emitted in head / in-flow (all sigs of the row) and footer (seen sigs only), slots compacted by sentinels that prepaint and `store.js` resolve identically; prepaint and `store.js` share breakpoints (from `morph_blocks_media_queries()`), DOM ids and the `data-morph-applied` idempotence flag; per-post isolation at prepaint rests on the content-fingerprint guard.
+- **editor → build**: `preSave-builder.js` writes the JS-resolved HTML under the exact meta key of `WBD_RSP_META_JS_HTML` (no leading underscore: REST refuses protected `_` meta). The JS fallback literal must equal the PHP value. `blockSignature()` JS ≡ `wbd_rsp_block_signature()` PHP byte for byte.
+- **editor ↔ core responsive**: two channels coexist — ours (`_morph_tablet`/`_morph_mobile`) and core's since WP 7.1 (`style['@tablet'|'@mobile']`, keys derived by `wbd_rsp_viewport_state_keys()`). Editor surfaces that detect or reset adaptations cover both; automatic save cleanup never touches the native channel; site-wide gestures of the settings screen touch ours only. Grep the doctrine before changing either.
+- **build → cache**: any payload-shape, reserved-key, meta-key, suffix or sig-algo change bumps `WBD_RSP_SCHEMA_VER` (folded into the version hash, so stale caches rebuild).
+- **build → serve**: the sig frozen at `render_block_data` prio 1 must be identical at build and at serve; reserved payload keys (list in `wbd_rsp_is_reserved_cache_key()`) are never treated as sigs.
+- **cache → serve**: `wbd_rsp_cache_get()` is the only read; serve never writes the cache.
+- **serve → front**: registry emitted in head / in-flow (all sigs of the row) and footer (seen sigs only), slots compacted by sentinels that prepaint and `store.js` resolve identically; prepaint and `store.js` share breakpoints (from `wbd_rsp_media_queries()`), DOM ids and the `data-morph-applied` idempotence flag; per-post isolation at prepaint rests on the content-fingerprint guard.
 - **attribute-source lists**: clonable sources, PHP-fallback sources and signature-fingerprint sources live in three files and must move together (the project keeps a test for it); a source entering the fingerprint changes signatures → `SCHEMA_VER` bump.
 - **build → media**: variant HTML freezes resolved attachment URLs; media lifecycle hooks rebuild host posts — any change to that path must keep them firing.
 

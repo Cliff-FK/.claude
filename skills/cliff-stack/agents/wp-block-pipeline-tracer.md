@@ -72,7 +72,7 @@ Run these before instrumenting (project root = `$CLAUDE_PROJECT_DIR`):
 
 ## Cross-zone links (what you do NOT do — delegate)
 
-- **On a project carrying the morph responsive engine** (per-viewport variants `_morph_*`, shipped in the theme; `MORPH_BLOCKS_DIR` defined), the zone agents already own the pipeline with deeper context: route editor / build+cache / serve+front / signature questions to the `morph-*` agents (via `morph-orchestrator`) instead of tracing blind. Use this tracer only when no zone agent covers the specific block, or when a zone agent explicitly needs an HTTP-vs-CLI timeline you produce.
+- **On a project carrying the morph responsive engine** (per-viewport variants `_morph_*`, shipped in the theme; `WBD_RSP_DIR` defined), the zone agents already own the pipeline with deeper context: route editor / build+cache / serve+front / signature questions to the `morph-*` agents (via `morph-orchestrator`) instead of tracing blind. Use this tracer only when no zone agent covers the specific block, or when a zone agent explicitly needs an HTTP-vs-CLI timeline you produce.
 - **End-to-end save-path regression** → `regression-tester`. **Root-cause audit of a morph bug** → `morph-blocks-auditor`.
 
 ## Constraints
