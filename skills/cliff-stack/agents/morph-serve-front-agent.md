@@ -29,7 +29,7 @@ You are the **SERVE + FRONT zone specialist** of the morph responsive engine: th
 5. `wbd_rsp_cache_get()` is the only read; serve never writes the cache. `wbd_is_live_render()`-style guards separate a visitor render from build/CLI/REST renders — check which one a code path is in before judging it.
 
 **Front (browser).**
-- `store.js`: embedded morphdom; discovery by TreeWalker on marker comments + `[data-morph-sig]` fallback; base SSR capture; depth-ascending application (parents before children); `matchMedia` live switching; MutationObserver for injected content; `morph-blocks:swapped` event consumed by theme blocks.
+- `store.js`: embedded morphdom; discovery by TreeWalker on marker comments + `[data-morph-sig]` fallback; base SSR capture; depth-ascending application (parents before children); `matchMedia` live switching; MutationObserver for injected content; `wbd-rsp:swapped` event consumed by theme blocks.
 - Prepaint (inline in `<head>`, filterable): MutationObserver before first paint, synchronous swap, poses `data-morph-applied` on each swapped root; per-post isolation rests on a per-occurrence content-fingerprint guard (`trusted()` / `fp()`), since `readReg()` merges every registry blob on the page.
 - Id alignment after swap uses the attribute list from `wbd_rsp_id_reference_attrs()` on both sides; theme ornaments marked with the ornament data attribute are ignored by fingerprints and anti-collapse.
 

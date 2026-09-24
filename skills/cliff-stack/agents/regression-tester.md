@@ -53,7 +53,7 @@ Reset state between rows (e.g. delete the version meta to cross the stale guard)
 ## Secondary checks (after the matrix)
 
 - **Responsive settings screen** (Grep `includes/admin/` for the section wired to the engine's filters): real-click a toggle, save, verify the option the screen writes (read its name from the screen's code), then restore.
-- **Front engine**: `[data-morph-sig]` present, a registry `script[type="application/json"][id^="morph-blocks-"]` present, `browser_resize` swaps and `[data-morph-applied]` appears before asserting; reload at small width (first-paint path).
+- **Front engine**: `[data-morph-sig]` present, a registry `script[type="application/json"][id^="wbd-rsp-"]` present, `browser_resize` swaps and `[data-morph-applied]` appears before asserting; reload at small width (first-paint path).
 - **Native channel**: if the change touches detection/reset, include one block carrying a core `style['@mobile']` override and assert it is untouched unless the user reset it.
 
 ## Output format
