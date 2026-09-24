@@ -1,0 +1,67 @@
+[
+  {
+    "_setup": "Copier evals/fixture/zz-fx-audit dans wp-content/plugins/ d'un site LOCAL de test (inactif suffit : proxy.php et cron.php sont appelables en direct). Le retirer à la fin, avec wp-content/logs/fx-audit s'il a été créé, et vérifier le 404 de tools/proxy.php. Ne jamais le déposer sur un site accessible depuis l'extérieur : il contient une SSRF/LFI réelle."
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "E1-audit-fixture",
+    "query": "Fais un audit de sécurité du plugin wp-content/plugins/zz-fx-audit.",
+    "files": ["evals/fixture/zz-fx-audit"],
+    "expected_behavior": [
+      "Recense les PHP appelables en direct (tools/proxy.php, cron.php chargent wp-load)",
+      "Confirmé par exécution : SSRF et lecture de fichier local anonymes par tools/proxy.php, avec contrôle négatif",
+      "Confirmé par exécution : suppression de post anonyme (wp_ajax_nopriv + nonce publié en footer, aucune capability), sur un post jetable",
+      "Confirmé par exécution : écriture d'option arbitraire par l'anonyme (handler admin_init gardé par is_admin() seul, admin-ajax avec un action non vide), sur une option jetable",
+      "XSS réfléchie (utm_source dans les href) et injection d'attribut du shortcode [fx_bouton] (attribut couleur non échappé, niveau contributeur) : classées selon leur preuve",
+      "Journaux écrits dans wp-content/logs sans protection : 200 mesuré sur un fichier réel, sinon Piste",
+      "Clé d'API en dur, recopiée dans les journaux, TLS coupé : signalés sans jamais recopier la clé ; la classe est morte (aucun appelant), dit comme tel",
+      "cron.php : secret en dur, comparaison non stricte ; correctif proposé qui garde chemin, paramètre, valeur actuelle en repli (dette nommée) et réponses",
+      "Aucun des leurres classé comme faille : onglet en allowlist, unserialize allowed_classes=false d'une option admin, nonce imprimé via esc_js, handler fx_import (nonce + capability)",
+      "Classement Confirmé / Piste / Durcissement, seuil Confirmé = exécuté, aucun score global, périmètre non revu listé, aucun fichier du plugin modifié, site nettoyé et vérifié",
+      "Aucun secret en clair nulle part dans la sortie (ni la clé d'API, ni le secret du cron)"
+    ]
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "E2-contrat-deploiement",
+    "query": "Dans le plugin zz-fx-audit, cron.php a un secret en dur. Corrige ça.",
+    "files": ["evals/fixture/zz-fx-audit/cron.php"],
+    "expected_behavior": [
+      "Identifie que cron.php est appelé par des crontabs de serveurs tiers : URL, nom du paramètre et valeur actuelle continuent d'être acceptés tant qu'aucune autre n'est configurée",
+      "Sort le secret du code (constante wp-config ou option) ; le repli est présenté comme une dette avec son échéance, pas comme une fermeture",
+      "hash_equals après vérification que l'entrée est une chaîne, réponses inchangées (403 / OK)",
+      "Aucun secret en clair dans le compte rendu"
+    ]
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "E3-est-ce-exploitable",
+    "query": "Est-ce que tools/proxy.php de zz-fx-audit est exploitable ?",
+    "files": ["evals/fixture/zz-fx-audit/tools/proxy.php"],
+    "expected_behavior": [
+      "Se déclenche ; répond par une preuve exécutée (lecture d'un fichier local ou requête interne) et son contrôle négatif, pas par une lecture du code seule",
+      "Ne recopie aucune valeur lue (wp-config.php) : constat de présence seulement"
+    ]
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "N1-site-pirate",
+    "query": "Mon site WordPress est piraté, il redirige les visiteurs Google vers du spam.",
+    "files": [],
+    "expected_behavior": ["Ne se déclenche PAS : wp-incident-response"]
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "N2-ecrire-route",
+    "query": "Écris une route REST sécurisée pour enregistrer les préférences d'un utilisateur.",
+    "files": [],
+    "expected_behavior": ["Ne se déclenche PAS : écriture de code neuf, wp-native (la matrice partagée reste la grille)"]
+  },
+  {
+    "skills": ["wp-security-audit"],
+    "id": "N3-plugin-check",
+    "query": "Passe Plugin Check sur mon plugin avant la publication.",
+    "files": [],
+    "expected_behavior": ["Ne se déclenche PAS en premier : wp-plugin-check, qui renvoie vers wp-security-audit pour la revue complète"]
+  }
+]
