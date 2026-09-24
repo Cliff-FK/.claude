@@ -1,6 +1,6 @@
 ---
 name: morph-editor-agent
-description: "Zone specialist for the EDITOR layer of the morph responsive engine shipped inside the WordPress theme (Gutenberg UI + variant preservation into the save). Use PROACTIVELY for any change or bug touching editor.js, preSave-builder.js, compile.php (editor enqueue/localize), support.php, the editor units of the engine (List View bullets, reset-variants modal, preview sync, viewport switch overlay) or the responsive settings screen — i.e. attribute cloning into _morph_tablet/_morph_mobile, per-viewport store patches (getBlockAttributes/getBlock/updateBlockAttributes), coexistence with the native WP 7.1 channel style['@tablet'|'@mobile'], identity attributes that must never be variantized, the JS blockSignature(), the js_html meta written before the REST save, the order panel, device-picker sync. Triggers on: \"variant not written/lost in editor\", \"block stopped morphing\", \"signature mismatch JS vs PHP\", \"meta key js_html\", \"order panel\", \"reset variants modal\", \"list view bullets\", \"monkey-patch store\", \"clone attr _morph_\", \"canWriteVariant\", \"wbdRspNonVariantAttrs\", \"natif @tablet\", \"écran de réglages responsive\", \"compteur Avec variantes\", \"Retirer toutes les variantes\", \"largeurs d'écran\"."
+description: "Zone specialist for the EDITOR layer of the morph responsive engine shipped inside the WordPress theme (Gutenberg UI + variant preservation into the save). Use PROACTIVELY for any change or bug touching editor.js, preSave-builder.js, compile.php (editor enqueue/localize), support.php, the editor units of the engine (List View bullets, reset-variants modal, preview sync, viewport switch overlay) or the responsive settings screen — i.e. attribute cloning into _rsp_tablet/_rsp_mobile, per-viewport store patches (getBlockAttributes/getBlock/updateBlockAttributes), coexistence with the native WP 7.1 channel style['@tablet'|'@mobile'], identity attributes that must never be variantized, the JS blockSignature(), the js_html meta written before the REST save, the order panel, device-picker sync. Triggers on: \"variant not written/lost in editor\", \"block stopped morphing\", \"signature mismatch JS vs PHP\", \"meta key js_html\", \"order panel\", \"reset variants modal\", \"list view bullets\", \"monkey-patch store\", \"clone attr _rsp_\", \"canWriteVariant\", \"wbdRspNonVariantAttrs\", \"natif @tablet\", \"écran de réglages responsive\", \"compteur Avec variantes\", \"Retirer toutes les variantes\", \"largeurs d'écran\"."
 tools: Read, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__playwright__browser_navigate, mcp__playwright__browser_evaluate, mcp__playwright__browser_snapshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_click, mcp__playwright__browser_press_key, mcp__playwright__browser_resize, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_type
 model: opus
 color: "#8b5cf6"
@@ -41,9 +41,9 @@ The editor zone is the **producer end**. It (1) clones eligible attributes into 
 
 ## breaks_if_touched
 
-- Changing a suffix value or length without the JS parsing helpers (`window.wbdRsp.parseVariantKey`, twin of `wbd_rsp_variant_key_base()`) → bases mis-extracted, `_morph_*` leak into the registry, sig JS≠PHP.
+- Changing a suffix value or length without the JS parsing helpers (`window.wbdRsp.parseVariantKey`, twin of `wbd_rsp_variant_key_base()`) → bases mis-extracted, `_rsp_*` leak into the registry, sig JS≠PHP.
 - Treating `metadata` as an ordinary attribute or removing the `uniqueByBlock` passthrough → store corruption.
-- Removing the leaked-variant strip in the proxied `setAttributes` → dozens of `_morph_*` keys injected.
+- Removing the leaked-variant strip in the proxied `setAttributes` → dozens of `_rsp_*` keys injected.
 - Editing `blockSignature` / stable-JSON / float helpers without mirroring PHP → orphan registry entries (focal-point floats, Word/PDF U+2028 text are the canaries).
 - Renaming the support flag → the HOC skips every block.
 - Adding an identity attribute to a non-variant list without first measuring that no content carries variants of it → silent data loss at first save.
@@ -52,7 +52,7 @@ The editor zone is the **producer end**. It (1) clones eligible attributes into 
 
 - **→ BUILD/CACHE** (`morph-build-cache-agent`): consumes the `js_html` meta in `rest_after_insert_*`; non-REST saves fall back to the durable cache. The save-time cleanup of redundant variants is theirs.
 - **→ SIGNATURE / CONSTANTS / source lists** (`morph-signature-contracts-agent`): sig parity, identifier parity, the three attribute-source lists.
-- **→ SERVE + FRONT** (`morph-serve-front-agent`): consumes the serialized `_morph_*` format; shares the active-mode store and viewport classes.
+- **→ SERVE + FRONT** (`morph-serve-front-agent`): consumes the serialized `_rsp_*` format; shares the active-mode store and viewport classes.
 - **→ units**: List View bullets and the reset modal depend on `window.wbdRsp.*` helpers from `editor.js` — never break that surface or the handle they depend on.
 
 ## Reuse, don't duplicate
