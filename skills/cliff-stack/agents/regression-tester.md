@@ -34,6 +34,7 @@ A REST-only WordPress MCP cannot see server hooks (`rest_after_insert_*`, `wp_af
 
 - **Default**: a throwaway post. Reuse a matrix post the project names if any; else create one with at least one rich-text variant (tablet/mobile suffix from `constants.php`) and one variant rendered by PHP alone (alignment/spacing/order), so both channels are covered. Never touch real content by default.
 - **On request** (real `post_id` passed): snapshot first (`wbd_rsp_cache_get()` payload, `WBD_RSP_META_VER` meta, `post_content`), restore verbatim at the end even on failure, and prove the restore by re-reading.
+- **Every save of a real object creates a revision, and WordPress purges the oldest ones beyond `WP_POST_REVISIONS`** (global styles, pages, patterns). Restoring the object does not bring them back: that loss is irreversible. Before any save of a real object, either raise the cap for the test run with a throwaway mu-plugin filtering `wp_revisions_to_keep` (removed at the end), or snapshot the CONTENT of its existing revisions, not only their IDs. Then delete the revisions the test created, and prove the pre-existing ones are untouched (IDs and content md5).
 
 ## The matrix — save paths × signals
 
