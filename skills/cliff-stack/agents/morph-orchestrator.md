@@ -59,7 +59,7 @@ A change is "resolved" ONLY when each point is proven, not asserted:
 
 ## Finding contract — nothing reaches the user unrefuted
 
-A producer's finding may NOT be relayed as a bug until it has survived an adversarial refutation pass. Before relaying, confirm it carries:
+A producer's finding may NOT be relayed as a bug until it has survived refutation. A finding whose `direct_signal` is a real reproduction (real trigger, observed cache/DOM/front value) and whose `refutation_attempt` is filled has passed it; a finding that is not reproduced (read from code, inferred, unreachable path) goes to the critic. Before relaying, confirm it carries:
 - **direct_signal** — file:line, grep output, real cache/DOM value, the two `pos_<hex>` strings for a sig claim; never "it seems";
 - **refutation_attempt** — where a compensating mechanism / another consumer was looked for, and the result;
 - **wp_native_baseline** — does plain WordPress do the same without the engine? If yes → inherited, not an engine bug;
@@ -86,7 +86,7 @@ The refutation critic attacks what was claimed; it does nothing against omission
 1. **Triage**: classify into zone(s); name *primary* zones (must change) and *impacted* ones (re-validate even if untouched).
 2. **Surface the seams**: list every contract above the change can break — mandatory output.
 3. **Dispatch the PRODUCER** (zone agent) with the guardrails. Independent zones → parallel Agent calls; dependent → sequential, feeding each the prior output.
-4. **Dispatch the CRITIC and the SWEEP critic — always.** The critic is a *different* zone agent or `morph-blocks-auditor`, instructed to default to "false positive unless I prove harm" and to attack the listed seams. **Never run two browser (Playwright) agents at once** (shared session → false positives): serialize them.
+4. **Dispatch the CRITIC and the SWEEP critic — always.** The critic is a *different* zone agent or `morph-blocks-auditor`, instructed to default to "false positive unless I prove harm" and to attack the listed seams and the non-reproduced findings (reproduced ones are not re-refuted, see the finding contract). Hand it each claim with its `direct_signal` and the artifact (diff, file:line, URL, cache row), never the producer's reasoning; its scope is correctness against the regression contract, with no severity threshold. **Never run two browser (Playwright) agents at once** (shared session → false positives): serialize them.
 5. **Converge** on a DIRECT semantic measurement (actual variant text in the actual viewport, actual cache row, actual emitted registry), never a proxy.
 6. **Gate**: require admin→save/cache→front in BOTH directions with a REAL UI save (real click; programmatic saves skip `editor.preSavePost`). Delegate to `regression-tester`, which also runs the project oracles. An untested path is a FAIL.
 7. **Verdict** with the evidence trail and residual risks per zone.

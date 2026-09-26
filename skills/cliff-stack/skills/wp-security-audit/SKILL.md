@@ -39,11 +39,10 @@ Pour chaque candidat : l'écrire d'abord en une phrase (revendication, cause, d�
 Confirmé / Piste non vérifiée / Durcissement (méthode de la matrice partagée, §3). Gravité **uniquement** pour les Confirmés, par impact × atteignabilité (anonyme ? rôle requis ?). Pas de score inventé, pas de « sécurisé » global. Chaque Confirmé : `fichier:ligne`, flux, prérequis, impact, **preuve exécutée** (commande et résultat), correctif. Un chemin tracé de bout en bout mais non exécuté reste une Piste, avec la mesure qui la trancherait : c'est le seuil de la matrice partagée, le même pour wp-plugin-check. Lister explicitement les leurres écartés et le périmètre non revu.
 
 ### 6. Corriger (seulement sur demande)
-1. **Critique adversarial avant d'écrire** : un agent à contexte isolé cherche ce que le correctif casserait (appelants, contrat HTTP, copies dans d'autres projets).
-2. Corriger la cause au niveau partagé (le helper qui colle l'URL, pas chaque appelant).
-3. Rejouer la preuve : le déclenchement échoue désormais, le chemin nominal marche toujours.
-4. **Critique adversarial sur le delta** : tout code écrit après une relecture n'est pas couvert par elle.
-5. Supprimer un fichier vulnérable seulement après avoir prouvé l'absence d'appelant sur tout le périmètre (référence §9), puis vérifier le 404.
+1. Corriger la cause au niveau partagé (le helper qui colle l'URL, pas chaque appelant).
+2. Rejouer la preuve : le déclenchement échoue désormais, le chemin nominal marche toujours.
+3. **Critique indépendant sur le diff** (correctif de sécurité sur du code recopié entre projets : critère de délégation rempli) : `cliff-stack:independent-critic`, avec le diff, la commande de preuve et le critère « la faille est fermée, et aucun appelant, contrat HTTP ni copie dans un autre projet ne casse ». Tout code écrit après cette passe repart en critique sur son delta.
+4. Supprimer un fichier vulnérable seulement après avoir prouvé l'absence d'appelant sur tout le périmètre (référence §9), puis vérifier le 404.
 
 ## Secrets
 Jamais la valeur, nulle part (rapport, question, commit, nom de fichier). Forme **recopiée telle quelle depuis la sortie de `scripts/scan-exposure.sh`**, jamais reconstruite à la main : à partir de 16 caractères `fichier:ligne  abcd… (32 car., sha256:0123456789ab)` ; en dessous, la longueur seule, car préfixe et empreinte d'un secret court se retrouvent par force brute (mesuré : 8 caractères en 11 s). Toute autre sortie qui imprime des lignes source (inventaire de wp-plugin-check, `grep`, extrait de journal, réponse HTTP) passe par `perl scripts/mask-secrets.pl` avant d'être lue ou citée. L'empreinte sert à compter les projets qui partagent la même valeur **avant** de recommander une révocation, qui les casserait tous. Dire explicitement ce qu'un retrait dans le code change et ne change pas (ni le prestataire, ni les autres copies, ni l'historique git).

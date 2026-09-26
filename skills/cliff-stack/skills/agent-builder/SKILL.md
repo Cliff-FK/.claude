@@ -1,6 +1,6 @@
 ---
 name: agent-builder
-description: Use when the user asks to create, build, design or improve a Claude Code subagent ("crée/fais/conçois un agent sur X", "un agent spécialisé Y", "un sous-agent qui Z", "améliore/mets à jour cet agent"). Combines Anthropic's official subagent doctrine (single-responsibility, description = when-to-delegate + triggers + "use PROACTIVELY", least-privilege tools, model-by-cognitive-load, focused structured system prompt) with proven house conventions (runtime discovery / nothing hardcoded, breaks_if_touched alarm list, cross-zone links, anti-"resolved"-by-proxy, a binding finding-contract for finding-producing agents, semantic density not terseness) AND a mandatory adversarial challenge — a REAL critic subagent spawned to INVALIDATE it (mis-triggering, overlap with existing agents, wrong tool/model scope) plus an eval baseline — before delivery. Produces an agent under ~/.claude/agents/ (or .claude/agents/ for a project agent).
+description: Use when the user asks to create, build, design or improve a Claude Code subagent ("crée/fais/conçois un agent sur X", "un agent spécialisé Y", "un sous-agent qui Z", "améliore/mets à jour cet agent"). Combines Anthropic's official subagent doctrine (single-responsibility, description = when-to-delegate + triggers + "use PROACTIVELY", least-privilege tools, model-by-cognitive-load, focused structured system prompt) with proven house conventions (runtime discovery / nothing hardcoded, breaks_if_touched alarm list, cross-zone links, anti-"resolved"-by-proxy, a binding finding-contract for finding-producing agents, semantic density not terseness) AND a mandatory adversarial challenge — the independent-critic agent asked to INVALIDATE it (mis-triggering, overlap with existing agents, wrong tool/model scope) plus an eval baseline — before delivery. Produces an agent under ~/.claude/agents/ (or .claude/agents/ for a project agent).
 ---
 
 # agent-builder — fabriquer un sous-agent Claude éprouvé (doctrine officielle + conventions maison + challenge adverse)
@@ -77,13 +77,13 @@ Un champ vide = signal visible, pas un trou.
 ```
 Pourquoi pas un hook : un hook PreToolUse est un filtre syntaxique (chaînes/commandes), il ne peut pas juger « ce finding est-il prouvé ? » (sémantique). Le bon niveau = les instructions de l'agent, qui raisonnent.
 
-### 8. PASSE ADVERSE OBLIGATOIRE — spawner un VRAI critique pour INVALIDER l'agent (cœur de l'outil)
-Producteur ≠ juge. Via l'outil **Agent**, spawner un **sous-agent critique en contexte indépendant** dont le seul mandat est de réfuter (proportionné : 1 critique ciblé, pas 100). Preuves exigées sur **trois axes** :
+### 8. PASSE ADVERSE OBLIGATOIRE — faire INVALIDER l'agent par `independent-critic` (cœur de l'outil)
+Agent global ou de plugin (sert dans tous les projets, code partagé) : critère de délégation rempli. Agent projet (`.claude/agents/`) : seulement si un critère du CLAUDE.md global s'applique. Un seul appel à l'agent `independent-critic` (subagent_type `cliff-stack:independent-critic`, protocole chez lui), avec pour artefact le fichier agent écrit et pour critère les axes ci-dessous, sans le raisonnement de conception (gabarit : `reference/checklist.md` §5) :
 - **Déclenchement** : 3-4 requêtes-utilisateur réalistes ; pour chacune, la `description` délègue-t-elle à CET agent ? Exhiber ≥1 **faux négatif** ou **faux positif**, ou prouver honnêtement qu'il n'y en a pas.
 - **Chevauchement** : vs les agents de §1 ; chiffrer l'overlap, nommer le plus proche.
 - **Tools/model** : prouver un sur-privilège (tool inutile) / sous-privilège (workflow infaisable), et l'adéquation du `model`.
 - **Si finding-producteur** : vérifier que le finding-contract (§7) est imposé ET que ses champs seraient *probants* (pas juste présents) — le critique tente un finding-bidon pour voir si le contract le bloquerait.
-Convergence producteur↔critique → corriger → **re-challenger si une correction a touché description ou périmètre**. Architecture `generator-critic-verifier` / `research-arbitrate`. ⚠️ Jamais de conclusion sur la seule checklist.
+Verdict réfuté → corriger → **re-challenger si une correction a touché description ou périmètre** (le delta n'est pas couvert par la première passe). ⚠️ Jamais de conclusion sur la seule checklist.
 
 ### 9. Test de déclenchement réel (axe DÉCLENCHEMENT)
 Énoncer les requêtes-échantillons et **vérifier** que la `description` route au bon agent (pas aux leurres voisins). Un agent dont on n'a pas exercé le déclenchement a un angle mort garanti (`methode-tester-axe-declenchement`).
