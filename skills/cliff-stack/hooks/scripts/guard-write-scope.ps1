@@ -102,7 +102,35 @@ function Normalize-Path([string]$path) {
     # Préserver le préfixe UNC \\serveur\share : sans lui, Is-PathInProject prendrait
     # le chemin réseau pour un relatif et l'autoriserait d'office.
     if ($isUnc) { $p = '\' + $p }
+    if ($p -match '^[A-Za-z]:\\') { $p = Resolve-CanonicalPath $p }
     return $p.ToLower()
+}
+
+# Forme canonique d'un chemin disque, pour que la comparaison de préfixe juge la cible
+# réelle : segments . et .. repliés lexicalement (comme le fait Win32), puis noms courts
+# 8.3 (CLIFFR~1) développés en forme longue via l'ancêtre existant le plus proche. La
+# partie inexistante reste telle quelle : un nom court qui n'existe pas n'aliase rien.
+function Resolve-CanonicalPath([string]$p) {
+    $parts = New-Object System.Collections.Generic.List[string]
+    foreach ($seg in $p.Split('\')) {
+        if ($seg -eq '.' -or ($seg -eq '' -and $parts.Count -gt 0)) { continue }
+        if ($seg -eq '..') { if ($parts.Count -gt 1) { $parts.RemoveAt($parts.Count - 1) }; continue }
+        $parts.Add($seg)
+    }
+    $p = ($parts -join '\')
+    if ($parts.Count -eq 1) { $p += '\' }
+    if ($p -notmatch '~') { return $p }
+    for ($n = $parts.Count; $n -ge 1; $n--) {
+        $head = ($parts.GetRange(0, $n) -join '\')
+        if ($n -eq 1) { $head += '\' }
+        if ([System.IO.Directory]::Exists($head) -or [System.IO.File]::Exists($head)) {
+            try { $long = (Get-Item -LiteralPath $head -Force).FullName } catch { return $p }
+            $tail = ($parts.GetRange($n, $parts.Count - $n) -join '\')
+            if (-not $tail) { return $long }
+            return $long.TrimEnd('\') + '\' + $tail
+        }
+    }
+    return $p
 }
 
 function Is-PathInProject([string]$path) {
@@ -111,10 +139,15 @@ function Is-PathInProject([string]$path) {
     # path relatif sans drive → relatif au cwd Claude = projet par défaut
     if ($p -notmatch '^[a-z]:' -and -not $p.StartsWith('\\')) { return $true }
     foreach ($root in $allowedRoots) {
-        if ($p.StartsWith($root)) { return $true }
+        # Frontière de segment : c:\tmp couvre c:\tmp\x, pas c:\tmpevil.
+        if ($p -eq $root -or $p.StartsWith($root.TrimEnd('\') + '\')) { return $true }
     }
     return $false
 }
+
+# Zones et cibles passent par la même forme canonique (une zone déclarée en nom court
+# ou via un CLAUDE_PROJECT_DIR court doit couvrir ses chemins longs, et inversement).
+$allowedRoots = @($allowedRoots | ForEach-Object { (Normalize-Path $_).TrimEnd('\') })
 
 # ==============================================================================
 # 0. INTERDITS ABSOLUS SYSTÈME — bloqués partout, même dans un projet, même
