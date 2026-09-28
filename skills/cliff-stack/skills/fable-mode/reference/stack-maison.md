@@ -32,6 +32,7 @@ But : router vers le bon skill/agent SANS coder de nom en dur (les noms peuvent 
 | Minifier JS/CSS | skill minify assets |
 | Audit UI/design/a11y/dark patterns | skill design auditor |
 | Recherche multi-sources vérifiée et arbitrée | skill research-arbitrate ou deep-research selon l'ampleur |
+| Réfuter une affirmation sur un artefact (diff, commande, URL), sur les critères du CLAUDE.md global seulement | agent critique indépendant |
 | Boucle générateur→critique→vérifieur en worktree | skill generator-critic-verifier |
 | Créer/MAJ un skill | skill builder de skills |
 | Créer/MAJ un agent | skill builder d'agents |

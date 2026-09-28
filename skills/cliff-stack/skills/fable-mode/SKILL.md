@@ -27,9 +27,9 @@ Levier bonus : **donner la raison, pas seulement la requête**. Fable performe m
 
 ⚠️ **Garde reasoning_extraction (critique)** : ne JAMAIS formuler la rigueur comme « montre / explicite / transcris ton raisonnement en réponse ». Cette formulation déclenche un refus classé reasoning_extraction sur Fable et le fait retomber silencieusement sur Opus 4.8. Formuler la rigueur comme des ACTIONS (reproduire, mesurer, grep, lire le code) ; le raisonnement lui-même vit dans les thinking blocks, pas dans le texte de réponse.
 
-Les 3 portes anti-fausse-correction et le réflexe adversarial sont déjà dans le CLAUDE.md global (toujours chargé) : ne pas les re-réciter, s'y référer. Valeur ajoutée Fable-spécifique ici :
+Les 3 portes anti-fausse-correction, le contrat de preuve et les critères du critique indépendant sont déjà dans le CLAUDE.md global (toujours chargé) : ne pas les re-réciter, s'y référer. Valeur ajoutée Fable-spécifique ici :
 - Fable détecte mieux les flakes intermittents : exploiter ça pour NE PAS déclarer résolu après un seul run propre.
-- La doc Fable et le CLAUDE.md convergent : la réfutation par un VÉRIFIEUR à contexte frais bat l'auto-critique. Sur run long, préférer déléguer la réfutation à un critique indépendant (le skill maison generator-critic-verifier) plutôt que s'auto-valider.
+- Le modèle vérifie déjà son travail : pas de « re-vérifie » ni de critique par défaut. Le critique indépendant du plugin ne se délègue que sur les critères du CLAUDE.md global (zone critique ou code distribué, action irréversible, run long non surveillé, cause sans reproduction réelle possible, demande explicite) ; il reçoit l'artefact et le critère, jamais le raisonnement.
 
 ## 3. Routage vers le stack maison
 

@@ -67,7 +67,7 @@ Pour chaque correction validée, déléguer à un agent qui corrige **dans le bo
 - Chaque agent produit le diff + un test qui prouve le **comportement** corrigé.
 
 ## 6. Valider — adversarial + Playwright
-- Pour chaque correctif : **agent adversarial indépendant** chargé de **réfuter** le fix (régression, cas limite, cause non traitée). Rejeter si la réfutation tient.
+- Pour chaque correctif (fan-out autonome non surveillé : critère de délégation rempli) : `cliff-stack:independent-critic`, avec le diff, l'URL ou la commande qui montre le symptôme du ticket, et le critère « le symptôme décrit a disparu, sans régression ni cause laissée en place ». Rejeter si le verdict est réfuté ; non concluant = pas résolu. Les critiques de correctifs front ou éditeur (Playwright) se lancent un par un, jamais en parallèle : la session navigateur est partagée.
 - Confiance < 100 % → **test Playwright réel** sur le site local (vraies actions : clic, Ctrl+S, resize — jamais une simulation programmatique). Réutiliser `wp-save-ui-test` / `verify` si pertinent.
 - Ne déclarer « résolu » qu'après validation par signal sémantique DIRECT (l'élément réel ciblé), jamais par proxy.
 

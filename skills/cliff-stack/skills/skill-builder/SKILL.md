@@ -17,8 +17,8 @@ Un bon skill **n'encode pas la doc** (déjà en ligne) — il encode **ce que la
 ### 1. Reconnaissance parallèle (fan-out, un seul message multi-tools)
 Lancer **ensemble** : (a) découverte de l'existant projet (Grep/Glob/Read), (b) recherche web/officielle, (c) **Context7** si lib/framework/SDK. Ne pas sérialiser l'indépendant.
 
-### 2. Agent adversarial sur tout « ça n'existe pas »
-Tout « pas de X officiel / pas d'outil » est une **HYPOTHÈSE**. Lancer un **agent chargé de RÉFUTER** (registres, GitHub, npm, CDN, `llms.txt`, `.well-known`). Ne conclure « n'existe pas » qu'après réfutation honnête.
+### 2. `independent-critic` sur tout « ça n'existe pas » que le skill va encoder
+Tout « pas de X officiel / pas d'outil » est une **HYPOTHÈSE** : une absence ne se reproduit pas, et le skill la diffusera dans tous les projets (critère de délégation rempli). La confier à `cliff-stack:independent-critic` : affirmation + recherche déjà faite (commandes, URLs) + critère « trouver X » (registres, GitHub, npm, CDN, `llms.txt`, `.well-known`). N'encoder « n'existe pas » que si elle survit.
 
 ### 3. Vérité terrain > web > mémoire
 Pour toute signature/champ/comportement : (1) **sources/types installés** (`node_modules/**/*.d.ts`, repo officiel à la version épinglée), (2) **Context7**, (3) doc officielle. **Jamais la mémoire.** Souvent un agent explorateur sur les `.d.ts`/CDN. Les bugs coûteux viennent d'une shape devinée.
@@ -54,7 +54,7 @@ Mesurer **deux choses distinctes** : (a) le skill **se déclenche** sur les bons
 Entrée mémoire (le skill existe + verdict d'enquête clé) pour ne pas tout re-découvrir. Liens `[[...]]` vers les mémoires connexes.
 
 ## Anti-patterns à refuser
-Paraphraser la doc • conclure « n'existe pas » sans agent adversarial • signatures « de mémoire » sans vérité terrain • écrire avant d'avoir évals + baseline • `description` à la 1re/2e personne ou pauvre en déclencheurs • `name` non-gérondif / avec "claude"/"anthropic" • SKILL.md fourre-tout >500 lignes • références imbriquées (>1 niveau) • chemins `\` Windows • valider seulement le déclenchement (pas la qualité) ou un seul modèle • skill produit sans audit de ses scripts/fetch externes • ignorer les conventions du projet.
+Paraphraser la doc • conclure « n'existe pas » sans passe `independent-critic` • signatures « de mémoire » sans vérité terrain • écrire avant d'avoir évals + baseline • `description` à la 1re/2e personne ou pauvre en déclencheurs • `name` non-gérondif / avec "claude"/"anthropic" • SKILL.md fourre-tout >500 lignes • références imbriquées (>1 niveau) • chemins `\` Windows • valider seulement le déclenchement (pas la qualité) ou un seul modèle • skill produit sans audit de ses scripts/fetch externes • ignorer les conventions du projet.
 
 ## Référence
 - `reference/checklist.md` — checklist officielle condensée, format JSON d'éval, squelette de fichiers, chiffres-clés.

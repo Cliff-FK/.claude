@@ -75,6 +75,6 @@ Prévoir aussi des cas **should-NOT-trigger** (pour vérifier que le skill ne se
 
 ## Méthode maison complémentaire (rappel — au-delà de l'officiel)
 - Fan-out parallèle dès la reconnaissance.
-- Agent **adversarial** systématique sur tout « ça n'existe pas ».
+- `independent-critic` sur tout « ça n'existe pas » que le skill encode.
 - **Vérité terrain** (`.d.ts`/sources installées) > web > mémoire pour chaque fait.
 - Tracer le skill en **mémoire** après livraison.

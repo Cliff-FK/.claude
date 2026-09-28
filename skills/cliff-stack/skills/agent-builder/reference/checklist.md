@@ -81,9 +81,9 @@ Un champ vide = signal visible, pas un trou.
 Ne JAMAIS conclure d'une absence locale (« je ne vois pas X lire le flag → bug »).
 ```
 
-## 5. Passe adverse — mandat du sous-agent critique
+## 5. Passe adverse — critère passé à `independent-critic`
 
-Spawner via l'outil **Agent**, modèle ≥ celui de la cible, mandat = RÉFUTER (gagne en trouvant une faille). Sortie exigée :
+Appel à `cliff-stack:independent-critic` (protocole, périmètre et forme du verdict chez lui). Entrée : chemin du fichier agent + le critère ci-dessous, jamais le raisonnement de conception.
 
 ```
 AXE 1 — Déclenchement
@@ -95,8 +95,8 @@ AXE 3 — Tools/model
   sur-privilège (tool inutile) ? sous-privilège (workflow infaisable) ? model adéquat ?
 AXE 4 (si finding-producteur) — Contract probant
   tenter un finding-bidon : le contract le bloquerait-il ? champs probants ou cosmétiques ?
-VERDICT : ship | fix-and-rechallenge (lister les fixes)
 ```
+Verdict survit → livrer ; réfuté → corriger puis re-challenger ; non concluant → nommer ce qui manque pour trancher.
 
 ## 6. Format d'éval (baseline avant rédaction)
 
@@ -128,5 +128,5 @@ color: <couleur>
 ## Chiffres-clés
 - `description` : seul signal de délégation → triggers explicites obligatoires.
 - Overlap toléré entre agents : < ~40 % (au-delà → fusionner ou redélimiter).
-- Passe adverse : 1 critique ciblé (pas 100) — proportionné, anti-overkill.
+- Passe adverse : 1 appel à `independent-critic` (pas 100), proportionné.
 - Profondeur max de sous-agents imbriqués : 5 (niveau 5 ne reçoit pas l'outil Agent).
